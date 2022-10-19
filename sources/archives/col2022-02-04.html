@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>CadsolOnLine</title>
+        <link rel="icon" type="image/x-icon" href="./favicon.ico">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0">
+        <link type="text/css" rel="stylesheet" href="./main.css">
+    </head>
+    <body>
+        <div id="container"></div>
+        <div id="info">
+            <p>CadsolOnLine </p>
+            <p>
+                created with the 3D library 
+		       <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a>
+            </p>
+            <p>
+                by <a href="https://cadsol.web-pages.fr/" target="_blank">AstreJL </a>
+            </p>
+            <p>
+                <img src="./imageMoret.jpg" alt="Image" style="max-width:100%;height:auto">
+            </p>
+            <label for="fileinput">. Open Sundial (JSON) . </label>
+            <div id="menu"></div>
+            <input type="file" id="fileinput" accept=".json">
+            <br>
+            <script>
+                const docinput = document.querySelector('input');
+                docinput.style.opacity = 0;
+            </script>
+        </div>
+        <!-- 		 -->
+        <script type="module">
+            
+                    
+
+			import * as THREE from '../build/three.module.js';
+			import Stats from './jsm/libs/stats.module.js';
+			import { GUI } from './jsm/libs/dat.gui.module.js';
+		 	//import { Curves } from './jsm/curves/CurveExtras.js';
+	   		import { OrbitControls } from './jsm/controls/OrbitControls.js';
+		    import {apparentEquatorial} from '../astronomia-master/src/solar.js';
+		    import * as JULIAN from '../astronomia-master/src/julian.js';	
+		    import {toRad,toDeg} from '../astronomia-master/src/base.js';					
+            import * as EQTIME from '../astronomia-master/src/eqtime.js';	
+            import * as SUNDIAL from '../astronomia-master/src/sundial.js';	
+            import { FontLoader } from './jsm/loaders/FontLoader.js';
+			import { TextGeometry } from './jsm/geometries/TextGeometry.js';
+
+            
+            document.querySelector("input").addEventListener('change', function() {loadJsonFile() });
+
+			let container, stats,button;
+			let camera, scene, renderer;
+			let cadran,gnomon,cadranSolaireGroup,heuresSolairesGroup,geometryCS, heuresSolairesListeMesh;
+			let stylePolaire,sousStylaire,meshDevise;
+			let separateurCSV =";"
+			let CSVtext="Point"+separateurCSV+"x"+separateurCSV+"y"+"\n";
+            let  cs ={    version:"2022.01.31", 
+                          nameFile:"cadsol",
+				          export:"?",			        
+					      largeur:600,
+				          hauteur:400,
+				          epaisseur:10,
+				          decli:0,
+				          incli:90,
+				          rot:0,
+				          colorCS: "rgb(200,250,250)",
+				          emissiveCS:"rgb(20,20,20)",
+				          specularCS:"rgb(0,0,0)",
+				          opaciteCS:0.5,
+				          lati:40,
+				          longi:3.6,
+				          adresse:"",
+				          urlOpenStreet:"",
+				          timezone:"",
+				          offset_sec:0,
+				          offset_string:"",
+				          now_in_dst:0,
+				          dst:0,
+				          hgnomon:50,
+				          egnomon:1,
+				          xgnomon:0,
+				          ygnomon:100,
+				          heuresSolaires:true,
+				          devise:'Carpe Diem'
+				          };
+
+
+		        container = document.getElementById( 'container' );
+                
+				// camera
+
+				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.01, 10000 );
+				camera.position.set( 1500, 2000, 1000 );
+
+				// scene
+                scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0x000000 );
+                
+
+
+				// light
+
+				const light = new THREE.DirectionalLight( 0xffffff );
+				light.position.set( 0, 1, 1 ).normalize();
+				//Set up shadow properties for the light
+				light.shadow.mapSize.width = 2048*4; // default
+				light.shadow.mapSize.height =2048*4; // default
+				light.shadow.camera.near = -1000; // default
+				light.shadow.camera.far = 1000; // default
+				light.shadow.camera.top = 1000;
+				light.shadow.camera.bottom = -1000;
+				light.shadow.camera.right = 1000;
+				light.shadow.camera.left = -1000;
+				
+
+				light.castShadow = true; // default false
+				scene.add( light );
+
+				
+
+				// renderer
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
+				container.appendChild( renderer.domElement );
+
+				// stats
+
+				stats = new Stats();
+//				console.log(stats)
+// 				stats.dom.style.position = 'absolute';
+//             	stats.dom.style.bottom = '0px';
+// 	            stats.dom.style.zIndex = 100;
+				container.appendChild( stats.dom );
+
+                // OrbitControls
+				const controls = new OrbitControls( camera, renderer.domElement );
+				controls.minDistance = 1;
+				controls.maxDistance = 10000;
+
+				//addEventListener
+				window.addEventListener( 'resize', onWindowResize );
+
+				
+				//Button New Sundial
+				button = document.createElement( 'button' );
+			    button.innerHTML ='New Sundial';
+			    const menu = document.getElementById( 'menu' );
+			    menu.appendChild( button );
+				button.addEventListener("click", function() { run() });
+
+
+                cadranSolaireGroup = new THREE.Group();               
+                heuresSolairesGroup=new THREE.Group();
+                heuresSolairesListeMesh=[];
+
+                const materialHeuresSolaires = new THREE.MeshLambertMaterial( { color: 0x00ff00 } );
+                
+                const materialGnomon = new THREE.MeshLambertMaterial( {color: 0xffffff} );
+
+                const materialCS = new THREE.MeshPhongMaterial(); 
+
+               // Axe de rotation de la terre
+               
+               const arrowHelper = new THREE.ArrowHelper(
+                   new THREE.Vector3( 0, Math.sin(cs.lati*Math.PI/180), -Math.cos(cs.lati*Math.PI/180)),
+                   new THREE.Vector3( 0, 0, 0 ), 
+                   Math.max(cs.largeur,cs.hauteur,cs.epaisseur), 
+                   0xffff00,30,15 );
+               scene.add( arrowHelper );
+
+// Devise------------------------------------------------------------   
+
+const loader = new FontLoader();
+
+loader.load( './fonts/helvetiker_regular.typeface.json', function ( font ) {
+
+ const fontGeometry = new TextGeometry( cs.devise, {
+		font: font,
+		size:10,
+		height: 2,
+		curveSegments: 4,
+		bevelEnabled: true,
+		bevelThickness: 0.5,
+		bevelSize: 0.5,
+		bevelOffset: 0,
+		bevelSegments: 1
+	} );
+ meshDevise=new THREE.Mesh( fontGeometry, materialGnomon);
+ 
+ meshDevise.position.x = -cs.largeur/2*0.9;
+ meshDevise.position.y = -cs.hauteur/2*0.9;
+ meshDevise.position.z = cs.epaisseur/2;
+} );
+
+
+
+              
+
+//-----------------------------------------------------------------------------------------------------				          
+function run() {	        
+           
+			init();
+
+// 		const jde = JULIAN.CalendarGregorianToJD(2022, 9, 24);
+// 		//const coordSoleilT=trueEquatorial(jde);
+// // 		const coordSoleilA=apparentEquatorial(jde);
+// // 		console.log(jde,toDeg(coordSoleilA.dec),EQTIME.eSmart(jde));
+// 		//function general (φ, D, a, z) { // (φ, D, a, z float64)  
+// 		//(lines []Line, center Point, u, ψ float64)
+// 		s=SUNDIAL.general(toRad(cs.lati),toRad(cs.decli),cs.hgnomon,toRad(cs.incli));
+// 		console.log(s);	
+// 		console.log('angle',toDeg(s.angle));	
+// 		console.log(s.center.x);
+// 		console.log(s.center.y);
+// 		console.log('length',s.lines.length);
+// 		console.log(s.lines);
+// 		console.log(s.lines[10]);
+// 		console.log(s.lines[10].hour);
+// 		console.log(s.lines[10].points[5]);
+// 		console.log(s.lines[10].points[5].x);
+		
+			animate();
+}
+
+// --------------------------------------------------------------------------------------------------------
+function pointDansCadran(x,y)
+{
+	return ((Math.abs(x)<=(cs.largeur/2))&&(Math.abs(y)<=(cs.hauteur/2))) 
+}
+//---------------------------------------------------------------------------------------------------------
+function TracerHeuresSolaires ()
+{
+let tubeGeometry,tubeGeometrySP,tubeGeometrySS,mesh,xp,yp,zp,lm,pipeSpline,pipeSplineCRC;
+
+   //Effacement des lignes existantes
+   lm=heuresSolairesListeMesh.length;
+   for (let i = 0; i < lm; i++)
+                    {
+   	                mesh = heuresSolairesListeMesh[ i ];
+   	                mesh.geometry.dispose();
+					heuresSolairesGroup.remove(mesh);
+					}
+  
+//    if lm>0 {stylePolaire.geometry.dispose();
+//             sousStylaire.geometry.dispose()    } 
+   heuresSolairesListeMesh=[];
+   cadranSolaireGroup.remove(heuresSolairesGroup);
+   cadranSolaireGroup.remove(stylePolaire);
+   cadranSolaireGroup.remove(sousStylaire);
+
+   const sunDial=SUNDIAL.general(toRad(cs.lati),toRad(cs.decli),cs.hgnomon,toRad(cs.incli));
+
+   // tracé des nouvelles lignes
+   for (let i = 0; i < sunDial.lines.length; i++) {
+   		if (sunDial.lines[i].points.length>1) 
+   		{ 	 CSVtext=CSVtext+"Heure: "+sunDial.lines[i].hour.toString()+"\n";		 
+			 pipeSpline = [];
+			 for (let p = 0; p < sunDial.lines[i].points.length; p++)
+			    {
+			 	xp=sunDial.lines[i].points[p].x+cs.xgnomon;
+   			    yp=sunDial.lines[i].points[p].y+cs.ygnomon;
+   			    zp=(cs.epaisseur+cs.egnomon)/2;
+				if (pointDansCadran(xp,yp))
+				     {pipeSpline.push(new THREE.Vector3(xp,yp,zp));
+				     CSVtext=CSVtext+"point: "+separateurCSV+xp.toFixed(2)+separateurCSV+yp.toFixed(2)+"\n"}
+				};
+				
+				if (pipeSpline.length>1) 
+				   {
+				   pipeSplineCRC=[];
+				   pipeSplineCRC = new THREE.CatmullRomCurve3(pipeSpline);
+				   //console.log(pipeSplineCRC);
+				   tubeGeometry = new THREE.TubeGeometry( pipeSplineCRC, 16, cs.egnomon,8 );
+				   mesh = new THREE.Mesh( tubeGeometry, materialHeuresSolaires);
+				   mesh.receiveShadow = true;
+				   heuresSolairesListeMesh.push(mesh);
+				   heuresSolairesGroup.add(mesh);
+			       }
+   		 }
+   	} 
+  cadranSolaireGroup.add(heuresSolairesGroup); 
+
+if (typeof(stylePolaire)!=="undefined") {stylePolaire.geometry.dispose()};
+if (typeof(sousStylaire)!=="undefined") {stylePolaire.geometry.dispose()};
+
+//  Style polaire
+  const v1=new THREE.Vector3( sunDial.center.x+cs.xgnomon,sunDial.center.y+cs.ygnomon, (cs.epaisseur)/2 );
+  const v2=new THREE.Vector3( cs.xgnomon,cs.ygnomon, cs.hgnomon+(cs.epaisseur+cs.egnomon)/2);
+  tubeGeometrySP = new THREE.TubeGeometry( new THREE.LineCurve3( v1, v2 ), 16, cs.egnomon,8 );
+  stylePolaire = new THREE.Mesh( tubeGeometrySP, materialGnomon);
+  stylePolaire.castShadow = true;
+  cadranSolaireGroup.add(stylePolaire);
+
+// Sous-stylaire
+  const v3=new THREE.Vector3( cs.xgnomon,cs.ygnomon, (cs.epaisseur+cs.egnomon)/2);
+  tubeGeometrySS = new THREE.TubeGeometry( new THREE.LineCurve3( v1, v3 ), 16, cs.egnomon,8 );
+  sousStylaire = new THREE.Mesh( tubeGeometrySS, materialGnomon);
+  sousStylaire.castShadow = true;
+  cadranSolaireGroup.add(sousStylaire);
+}
+			
+//-----------------------------------------------------------------------------------------------------
+function loadJsonFile() 
+{
+//  const content = document.querySelector('.content');
+  const [file] = document.querySelector('input[type=file]').files;
+//   const docinput = document.querySelector('input');
+//   docinput.style.opacity = 0;
+  
+  const reader = new FileReader();
+  reader.addEventListener("load", () => 
+    {
+    cs.export="?";
+    cs=JSON.parse(reader.result); 
+    console.log(JSON.stringify(cs,null,1));
+    
+//     document.getElementById("fileinput").disabled = 'true';
+//     button.innerHTML = "";
+//     button.disabled=true;
+    run();
+    }, false);
+  if (file) 
+   {
+    reader.readAsText(file);
+   }
+   
+   return reader.result;
+  
+
+}		
+
+//--------------------------------------------------------------------------------------------------------
+			
+            //function saveString
+            //saveString('uih uihgb iuo huipo','Bidon.txt');
+			const link = document.createElement( 'a' );
+			link.style.display = 'none';
+			document.body.appendChild( link ); // Firefox workaround, see #6594
+			function save( blob, filename ) {
+						link.href = URL.createObjectURL( blob );
+						link.download = filename;
+						link.click();}
+			function saveString( text, filename ) {			       
+               save( new Blob( [ text ], { type: 'text/plain' } ), filename );
+			}
+				
+// ---------------------------------------------------------------------------------------------------
+  function 	eulerCsGroup() 
+  {
+  	const a = new THREE.Euler( (cs.incli-90)/180*Math.PI, -cs.decli/180*Math.PI,cs.rot/180*Math.PI, 'YXZ' );
+	cadranSolaireGroup.setRotationFromEuler(a); 	
+  }
+
+//---------------------------------------------------------------------------------------------------------
+			function init() {
+		
+
+                //Effacement de toute la page d'introduction
+
+		document.getElementById("info").style.display = "none";		
+
+				// dat.GUI ///////////////////////////////////////////////////////////////////////////////////////
+
+				
+	    const gui = new GUI( { width: Math.min(Math.round(window.innerWidth/2),300) } );
+              
+                  	
+               
+		   const FolderSundial = gui.addFolder( 'Sundial...' );
+
+		      const folderDimensionsSundial = FolderSundial.addFolder("Dimensions...");  
+
+				folderDimensionsSundial.add( cs, "largeur", 10, 1000 )
+				  .name("Width")
+				  .onChange(function(v){cs.largeur=v; 
+				                        cadran.scale.x=cs.largeur; 
+				                        meshDevise.position.x = -cs.largeur/2*0.9})
+				  .onFinishChange(function(){ TracerHeuresSolaires() });
+				  
+				folderDimensionsSundial.add( cs, "hauteur", 10, 1000, 0.1 )
+				  .name("Height")
+				  .onChange(function(v){cs.hauteur=v;cadran.scale.y=cs.hauteur;
+				                        meshDevise.position.y = -cs.hauteur/2*0.9})
+				  .onFinishChange(function(){ TracerHeuresSolaires() });
+				
+				folderDimensionsSundial.add( cs, "epaisseur", 10, 1000, 0.1 )
+				   .name("Depth")
+				   .onChange(function(v){
+					cs.epaisseur=v;
+					cadran.scale.z=cs.epaisseur; 
+					meshDevise.position.z = cs.epaisseur/2;
+					gnomon.position.z=(cs.hgnomon+cs.epaisseur)/2 })
+				   .onFinishChange(function(){ TracerHeuresSolaires() }); 
+
+			 const folderOrientationSundial = FolderSundial.addFolder("Orientation...");     
+				folderOrientationSundial.add( cs, "decli", -180, 180, 0.1 )
+				   .name("Declinaison")
+				   .onChange(function(v){
+					cs.decli=-v;
+					eulerCsGroup()}) 
+				   .onFinishChange(function(){ TracerHeuresSolaires() }); 
+				folderOrientationSundial.add( cs, "incli", -180, 180, 0.1 )
+				   .name("Inclinaison")
+				   .onChange(function(v){
+				            	cs.incli=v;
+					         eulerCsGroup() })
+				   .onFinishChange(function(){TracerHeuresSolaires()});
+//                 folderOrientationSundial.add( cs, "rot", -180, 180, 0.1 )
+//                    .name("Rotation")
+//                    .onChange(function(v){
+// 					cs.rot=v;
+// 					eulerCsGroup() })
+//                    .onFinishChange(function(){TracerHeuresSolaires()});
+
+
+
+            const folderGeoSundial = FolderSundial.addFolder("Geographical coordinates...");  
+              folderGeoSundial.add(cs,"adresse") 
+                   .name("Seek by adress")
+                   .onFinishChange(function(v){
+                   	  if (v.length>0){
+                   	  	RechercheParAdresse(v);
+                     	TracerHeuresSolaires();
+                     	ArrowAxe();
+                    	folderGeoSundial.updateDisplay()}
+                   	})   
+              folderGeoSundial.add(cs,"timezone") 
+                   .name("Time zone");
+              folderGeoSundial.add(cs,"offset_sec") 
+                   .name("offset from UTC (sec)")
+                   .onFinishChange(function(v){
+                   	    cs.offset_sec=v
+                       });
+              folderGeoSundial.add(cs,"offset_string") 
+                   .name(" offset (HHMM)");
+              folderGeoSundial.add(cs,"dst") 
+                   .name("summer time (H)");
+                       
+              folderGeoSundial.add(cs,"lati",-90,90,0.000001) 
+                   .name("Latitude")
+                   .onChange(function(v){cs.lati=v;ArrowAxe()})
+                   .onFinishChange(function(){TracerHeuresSolaires()}); 
+              folderGeoSundial.add(cs,"longi",-180,180,0.000001) 
+                   .name("Longitude")
+                   .onChange(function(v){cs.longi=v})
+                   .onFinishChange(function(){TracerHeuresSolaires()}); 
+             
+              
+                          
+               materialCS.color.setStyle(cs.colorCS); 
+               materialCS.emissive.setStyle(cs.emissiveCS); 
+               materialCS.specular.setStyle(cs.specularCS); 
+               materialCS.transparent=true;
+               materialCS.opacity=cs.opaciteCS;
+              
+           const folderColorsSundial = FolderSundial.addFolder("Colors...");
+              
+              folderColorsSundial.addColor(cs, 'colorCS').name('reflection').onChange(function (e) {
+                   materialCS.color = new THREE.Color(e);
+                   cs.colorCS=materialCS.color.getStyle();
+                   });
+           
+              folderColorsSundial.addColor(cs, 'emissiveCS').name('emition').onChange(function (e) {
+                   materialCS.emissive = new THREE.Color(e);
+                   cs.emissiveCS=materialCS.emissive.getStyle();
+                   });
+//               folderColorsSundial.addColor(controlCS, 'specular').onChange(function (e) {
+//                    materialCS.specular = new THREE.Color(e);
+//                    cs.specularCS=materialCS.specular.getStyle();
+//                    });
+//              folderColorsSundial.add(materialCS, 'shininess', 0, 100, )
+              
+               
+              folderColorsSundial.add(cs,'opaciteCS',0,1,0.1)
+                   .name('opacity').onChange(function(e)
+                            {  materialCS.transparent=true;
+              	               cs.opaciteCS=e;
+                               materialCS.opacity=e }  );
+                        
+              folderColorsSundial.add(materialCS, 'wireframe');
+
+          
+           
+
+           const folderGnomon=gui.addFolder('Straight style...');
+
+				folderGnomon.add( cs, "hgnomon", 10, 1000, 0.1 )
+				  .name("Length")
+				  .onChange( function (e) {
+                    cs.hgnomon=e;
+                    gnomon.scale.y=cs.hgnomon;
+                    gnomon.position.z=(cs.hgnomon+cs.epaisseur)/2 })
+                  .onFinishChange(function(){TracerHeuresSolaires()});
+				folderGnomon.add( cs, "egnomon", 0.1, 10, 0.1 )
+				  .name("Thickness")
+				  .onChange( function (e) {
+					cs.egnomon=e;
+					gnomon.scale.x=cs.egnomon;
+					gnomon.scale.z=cs.egnomon})
+				  .onFinishChange(function(){TracerHeuresSolaires()});				  
+				folderGnomon.add( cs, "xgnomon", -1000, 1000, 0.1 )
+				  .name(">")
+				  .onChange( function (e) {
+					cs.xgnomon=e;
+					gnomon.position.x=cs.xgnomon})
+				  .onFinishChange(function(){TracerHeuresSolaires()});
+				folderGnomon.add( cs, "ygnomon", -1000, 1000, 0.1 )
+				  .name("^")
+				  .onChange( function (e ) {
+					cs.ygnomon=e;gnomon.position.y=cs.ygnomon})
+                  .onFinishChange(function(){TracerHeuresSolaires()});
+
+                  
+			const folderHours = gui.addFolder( 'Hours...' ); 
+			      const folderSolarHours=folderHours.addFolder('Solars hours...');
+			            folderSolarHours.add(cs,'heuresSolaires')
+			              .name('Trace')
+			              .onChange( function  (e){
+			            	cs.heuresSolaires=e;
+			            	if (e) {TracerHeuresSolaires()}else{cadranSolaireGroup.remove(heuresSolairesGroup)}});
+
+			const folderArcs=   gui.addFolder( 'Arcs, equinoxes and solstices' ); 
+
+            const folderFiles = gui.addFolder( 'Save sundial, scene, 3D files...' ); 
+                cs.export="?";
+                folderFiles.add(cs,"nameFile").name("File name").onChange( function  (e) {
+                	cs.nameFile=e;
+                	});
+                folderFiles.add(cs,"export",["?","Sundial(JSON)","Scene(JSON)","Spreadsheet (CSV)","3D (STL)"]).name("Save").onChange( function  (e) 
+                   {
+                	if (e=="Sundial(JSON)") 
+                               	  {saveString(JSON.stringify(cs,null,2),cs.nameFile+'.sundial.json')};
+                    if (e=="Scene(JSON)")
+                	              {saveString(JSON.stringify(scene.toJSON(),null,2),cs.nameFile+'.scene.json')};
+                	if (e=="Spreadsheet (CSV)")
+                	              {saveString(CSVtext,cs.nameFile+'.csv')};
+                	cs.export="?";
+                	folderFiles.updateDisplay()
+                	});
+					         
+
+              //generateGeometry;           
+
+              geometryCS = new THREE.BoxGeometry(1,1,1);	
+             
+			  cadran = new THREE.Mesh( geometryCS, materialCS ); 
+			  cadran.scale.x=cs.largeur; 
+			  cadran.scale.y=cs.hauteur; 
+			  cadran.scale.z=cs.epaisseur;
+			  cadran.receiveShadow = true;
+
+
+               const geometryGnomon = new THREE.CylinderGeometry( 1, 1, 1, 16 );
+              
+               gnomon = new THREE.Mesh( geometryGnomon, materialGnomon );  
+               //cadran.add(gnomon);
+               gnomon.position.x=cs.xgnomon; 
+               gnomon.position.y=cs.ygnomon;
+               gnomon.position.z=(cs.hgnomon+cs.epaisseur)/2 ; 
+               gnomon.scale.y=cs.hgnomon;
+               gnomon.scale.x=cs.egnomon;
+			   gnomon.scale.z=cs.egnomon;
+               gnomon.rotation.x = Math.PI*0.5;
+               gnomon.castShadow = true; //default is false
+
+               
+               
+			   //	cadranSolaireGroup 
+			   cadranSolaireGroup.add( cadran );
+			   cadranSolaireGroup.add( gnomon );
+			   cadranSolaireGroup.add(meshDevise);
+
+				
+				if (cs.heuresSolaires==true)  {TracerHeuresSolaires()};
+				scene.add( cadranSolaireGroup );
+				eulerCsGroup();
+
+             
+ 
+               // helpers 
+                const axesHelper = new THREE.AxesHelper( Math.max(cs.largeur,cs.hauteur,cs.epaisseur) );
+                scene.add(axesHelper);
+				const camHelper = new THREE.CameraHelper( light.shadow.camera );
+               // scene.add( camHelper );
+			   
+               
+                
+   }//init
+
+//--------------------------------------------------------------------------------------------------------
+           function RechercheParAdresse(v){
+//  adrAPIOpenStreet :=
+//       'http://api.opencagedata.com/geocode/v1/json?key=a110b502b29f4de9a47d95bc3b6c5e98&q='
+//       + adresse + '&limit=1';
+//  OpenStreetURL: String = 'https://www.openstreetmap.org/#map=15/%s/%s';
+
+// Create an XMLHttpRequest object
+             const xhttp = new XMLHttpRequest();
+
+           // Define a callback function
+             xhttp.onload = function() {
+				  // Here you can use the Data
+					 let myObj = JSON.parse(this.responseText);
+					 console.log(JSON.stringify(myObj,null,2));
+					 if (myObj.total_results>0) {           
+					  cs.adresse=myObj.results[0].formatted;          
+					  cs.lati=myObj.results[0].geometry.lat;
+					  cs.longi=myObj.results[0].geometry.lng;
+					  cs.urlOpenStreet=myObj.results[0].annotations.OSM.url;
+					  cs.timezone=myObj.results[0].annotations.timezone.name;
+					  cs.offset_sec=myObj.results[0].annotations.timezone.offset_sec;
+					  cs.offset_string=myObj.results[0].annotations.timezone.offset_string;
+					  cs.now_in_dst=myObj.results[0].annotations.timezone.now_in_dst;
+// 					"timezone": {
+//                       "name": "America/New_York",
+//                       "now_in_dst": 0,
+//                       "offset_sec": -18000,
+//                       "offset_string": "-0500",
+					window.open(cs.urlOpenStreet, "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=400,height=400")
+                      }
+               console.log(cs);
+
+             }
+          // Send a request
+			 xhttp.open("GET", "http://api.opencagedata.com/geocode/v1/json?key=a110b502b29f4de9a47d95bc3b6c5e98&q="+ v + "&limit=1",false);
+			 xhttp.send();
+           }
+
+//-------------------------------------------------------------------------------------------------------------
+
+           function ArrowAxe() {
+               
+               arrowHelper.setDirection( new THREE.Vector3( 0, Math.sin(cs.lati*Math.PI/180), -Math.cos(cs.lati*Math.PI/180)));
+               arrowHelper.setLength(Math.max(cs.largeur,cs.hauteur,cs.epaisseur),30,10);
+           }
+			
+//---------------------------------------------------------------------------------------------------------
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+                //cadranSolaireGroup.rotation.y +=0.01;
+				render();
+				stats.update();
+
+			}
+
+			//
+
+			function render() {
+				
+				renderer.render( scene,camera );
+
+			}
+
+		
+        
+        
+        
+        
+        
+        
+        
+        
+        </script>
+    </body>
+</html>
