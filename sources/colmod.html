@@ -89,7 +89,7 @@
 			      HSDSA="Sidereals (summer, autumn)",
 			      HSDWS="Sidereals (winter, spring)";     
 
-            import {SP,BF,BFG,ANL,cs,TableSol,RechercheParAdresse,getLocation} from './colvars.js';
+            import {SP,BF,BFG,ANL,cs,TableSol,RechercheParAdresse,getLocation,eclair} from './colvars.js';
 			cs.version="2022/10/18"
 			let xd=0,yd=0,zd=1    // Direction Gnomon analemmatique  Modif AJL 
 
@@ -264,8 +264,8 @@
 				 const geometryGnomon = new THREE.CylinderGeometry( 1, 1, 1, 16 );    
 			     gnomon = new THREE.Mesh( geometryGnomon, materialGnomon );        
 				 const geometryboutGnomon= new THREE.SphereGeometry( 1, 32,32 );   
-				 const boutGnomon=new THREE.Mesh( geometryboutGnomon, materialGnomon );
-				 const debutGnomon=new THREE.Mesh( geometryboutGnomon, materialGnomon );
+				// const boutGnomon=new THREE.Mesh( geometryboutGnomon, materialGnomon );
+				//const debutGnomon=new THREE.Mesh( geometryboutGnomon, materialGnomon );
 				 //gnomon.add(boutGnomon)
 				 //gnomon.add(debutGnomon)
 				// boutGnomon.visible=true
@@ -446,7 +446,7 @@ const fontGeometry = new TextGeometry( texte, {
  
  group.add(mesh);
  if (listeMesh){listeMesh.push(mesh)};
- if (gauche) {x=x-(texte.length)*7*cs.hoursTextSize}else{x=x+7*cs.hoursTextSize}
+ if (gauche) {x=x-(texte.length-1)*7*cs.hoursTextSize}//else{x=x+7*cs.hoursTextSize}
  if ((x+7*cs.hoursTextSize)>(cs.largeur/2-5)){x-=14*cs.hoursTextSize}
  if ((y+7*cs.hoursTextSize)>(cs.hauteur/2-5)){y-=14*cs.hoursTextSize}
  mesh.position.x = x;
@@ -519,6 +519,7 @@ function Ephemerid(year) {
 
 //------------------------------------------------------------------------------------------------------------
 function TracerHeuresEtArcs(){
+document.body.style.cursor="wait"
    initCSVtext()
 	if (cs.typeCadran == ANL){
 		TracerAnalem();
@@ -534,99 +535,10 @@ function TracerHeuresEtArcs(){
    TracerArcsDiurnes()
 	}
    TracerStyle()
+document.body.style.cursor="auto"
 }
 
-// --------------------------------------------------------------------------------------------------------
-	function eclair() {
-		var la = cs.lati*Math.PI/180, ic = cs.incli*Math.PI/180, dc = -cs.decli*Math.PI/180;
-		var amn, a1 = 5, a2, amx, ob = .4091;
 
-		function alev(la, lo) {
-			// Angle horaire local minimum au lever du soleil
-			// à la latitude la et différence de longitude lo
-			var al = -Math.acos(-Math.abs(Math.tan(la))*Math.tan(ob)) + lo;
-			if (al < -Math.PI) al += 2*Math.PI;
-			return al;
-		}
-
-		function acou(la, lo) {
-			// Angle horaire local maximum au coucher du soleil
-			// à la latitude la et différence de longitude lo
-			var ac = Math.acos(-Math.abs(Math.tan(la))*Math.tan(ob)) + lo;
-			if (ac > Math.PI) ac -= 2*Math.PI;
-			return ac;
-		}
-
-		// Latitude du cadran horizontal équivalent (CHE)
-		var lae = Math.asin(Math.sin(la)*Math.cos(ic) - Math.cos(la)*Math.cos(dc)*Math.sin(ic));
-		// Différence de longitude du CHE (positive si le CHE est à l’ouest)
-		var loe = Math.atan2(Math.sin(dc)*Math.sin(ic), Math.cos(la)*Math.cos(ic) + Math.sin(la)*Math.cos(dc)*Math.sin(ic));
-
-		if (Math.abs(Math.cos(la)*Math.sin(dc)) >= Math.sin(ob)) {
-			// Sur la sphère céleste les intersections des grands cercles
-			// de l’horizon et du cadran (I1 et I2) sont hors des tropiques.
-			// On se situe donc entre les cercles polaires, le CHE aussi.
-			if (loe > 0) {
-				// Le CHE est à l’ouest,
-				// le cadran n’est pas éclairé le matin
-				amn = alev(lae, loe); amx = acou(la, 0);
-			} else {
-				// Le CHE est à l’est,
-				// le cadran n’est pas éclairé le soir
-				amn = alev(la, 0); amx = acou(lae, loe);
-			}
-		} else {
-			// Les points I1 et I2 sont entre les tropiques.
-			if (la*lae < 0) {
-				// Le CHE est situé dans l’autre hémisphère,
-				// les points I1 et I2 marquent généralement les heures extrêmes.
-				amn = Math.atan2(-Math.cos(dc)/Math.sin(la), Math.sin(dc));
-				amx = Math.atan2(Math.cos(dc)/Math.sin(la), -Math.sin(dc));
-				if (Math.cos(la) > Math.sin(ob) && Math.cos(lae) > Math.sin(ob) && Math.cos(loe) < 0) {
-					// Quand on se situe entre les cercles polaires, le CHE aussi
-					// et que la différence de longitude est importante.
-					// Le cadran n’est pas éclairé une partie de la journée.
-					if (Math.abs(la) > Math.abs(lae)) {
-						// Les points I1 et I2 marquent la période sans éclairement
-						// et le cadran peut être éclairé le reste de la journée.
-						a1 = amx; a2 = amn;
-						amn = alev(la, 0); amx = acou(la, 0);
-					} else {
-						// Les heures sans éclairement proviennent de la position du cadran
-						a1 = acou(lae, loe); a2 = alev(lae, loe);
-					}
-				}
-			} else {
-				// Le CHE est dans le même hémisphère
-				if (Math.cos(la) <= Math.sin(ob) && Math.cos(lae) <= Math.sin(ob)) {
-					// On se situe dans la zone polaire, le CHE aussi.
-					// Le cadran peut être éclairé toute la journée.
-					amn = -Math.PI; amx = Math.PI;
-				} else {
-					if (Math.cos(la) > Math.sin(ob) && Math.cos(lae) > Math.sin(ob) && Math.cos(loe) < 0) {
-						// On se situe entre les cercles polaires, le CHE aussi
-						// et la différence de longitude est importante.
-						// Le cadran n’est pas éclairé une partie de la journée.
-						amn = alev(la, 0); a1 = acou(lae, loe);
-						a2 = alev(lae, loe); amx = acou(la, 0);
-					} else {
-						if (Math.abs(la) <= Math.abs(lae)) {
-							// Dans le cas où la latitude la est plus petite que lae,
-							// c’est l’horizon qui limite l’éclairement.
-							amn = alev(la, 0); amx = acou(la, 0);
-						} else {
-							// Sinon c’est le cadran qui limite son éclairement.
-							amn = alev(lae, loe); amx = acou(lae, loe);
-						}
-					}
-				}
-			}
-		}
-
-		if (a1 == 5) {a1 = 0; a2 = 0;}
-		if (amn > amx) amx += 2*Math.PI;
-		return [amn, a1, a2, amx];
-	}
 
 function Rot(x, y, r) {
 	r *= Math.PI/180;
@@ -781,13 +693,13 @@ function EcrirelesDates(){
 		// cadranSolaireGroup.add(gradMesh)
 		// gradMesh.position.set(xp,yp,cs.epaisseur/2)
 		// gradMesh.scale.set(cs.egnomon,cs.egnomon,cs.egnomon)
-		// gradMesh.rotateX(Math.PI/2)
+		// gradMesh.rotateX(Math.PI/2) 
 		//debutGnomon.position.x=xp;	debutGnomon.position.y=yp ; debutGnomon.position.z= (cs.egnomon+cs.epaisseur)/2
 		if ((jde>TS.solJuin)&&(jde<TS.solDecembre))	{agauche=true}else{agauche=false}
 		js=j.toString()
 		ms=m.toString(); if (m<10){ms='0'+ms}
-		if (agauche){EcrireTexte(js+"/"+ms,xp,yp,materialAnalem,analemGroup,analemListeMesh,true)}
-		        else{EcrireTexte(js+"/"+ms,xp,yp,materialAnalem,analemGroup,analemListeMesh,false)}
+		if (agauche){EcrireTexte(js+"/"+ms+" ",xp,yp,materialAnalem,analemGroup,analemListeMesh,true)}
+		        else{EcrireTexte(js+"/"+ms,xp+4,yp,materialAnalem,analemGroup,analemListeMesh,false)}
 		ligneSVG(xp-2,yp,xp+2,yp)
 	    }
 	//cs.hoursTextSize*=2
@@ -860,13 +772,13 @@ if (cs.typeCadran==SP){
 
 		cadranSolaireGroup.add(gnomon)
 
-		boutGnomon.visible= cs.vgnomon	||cs.vstyle
-		boutGnomon.visible= cs.vsousstyle || cs.vstyle
-		debutGnomon.visible=cs.vstyle||cs.vsousstyle
+	//	boutGnomon.visible= cs.vgnomon	||cs.vstyle
+	//	boutGnomon.visible= cs.vsousstyle || cs.vstyle
+	//	debutGnomon.visible=cs.vstyle||cs.vsousstyle
 		
 		
-		boutGnomon.position.x=v2.x;debutGnomon.position.y=v2.y;debutGnomon.position.z=v2.z
-		debutGnomon.position.x=v1.x;debutGnomon.position.y=v1.y;debutGnomon.position.z=v1.z
+	//	boutGnomon.position.x=v2.x;debutGnomon.position.y=v2.y;debutGnomon.position.z=v2.z
+	//	debutGnomon.position.x=v1.x;debutGnomon.position.y=v1.y;debutGnomon.position.z=v1.z
 		
 
 		ligneSVG(v3.x,v3.y,v4.x,v4.y)
@@ -1585,23 +1497,30 @@ function helpGui(g,textHelp){
 		}
 		
 
-		const hsol=gui.add( cs, "hsol", 0, 24, 0.01 )
+		const guihsol=gui.add( cs, "hsol", 0, 24, 0.01 )
                          .name("Hour  (0-24)")
                          .onChange(function(e){cs.hsol=e;PlacerLeSoleil()});
-			  helpGui(hsol,'decimal hour')
+			  helpGui(guihsol,'decimal hour')
 			// hsol.domElement.addEventListener("mouseover", function(){
 			// 	gui.title('decimal hour')
 			// })
 			// hsol.domElement.addEventListener("mouseout", function(){
 			// 	gui.title("Edit sundial...")
 			// })
-        const dy=gui.add( cs, "dayofYear", 1, 365, 1 )
+        const guiday=gui.add( cs, "dayofYear", 1, 365, 1 )
                          .name("Day (1-365))")
 						 .onChange(function () {
 													PlacerLeSoleil();
 													if (cs.typeCadran == ANL) TracerStyle();
 												});
-			  helpGui(dy,'day of the year')
+			  helpGui(guiday,'day of the year')
+		
+		const  guiyear=gui.add(cs,"year")
+		                  .name("Year")
+						  .onFinishChange(function () {
+							                      TS=TableSol(cs.year) 
+												  TracerHeuresEtArcs();
+												});
 				
 		gui.add(cs,"typeCadran",[SP,BF,BFG,ANL]).name("type of sundial") ///+++
 		                 .onChange(function(e){
@@ -1790,7 +1709,7 @@ const folderGeoSundial = gui.addFolder("Geolocation")
 					cadran.scale.z=cs.epaisseur; 
 					meshDevise.position.z = cs.epaisseur/2;					
 					gnomon.position.z=(cs.hgnomon+cs.epaisseur)/2
-				    PlacerBoutGnomon() })
+				      })
 				   .onFinishChange(function(){ TracerHeuresEtArcs() });    
 				   
 //// STYLE
@@ -1849,7 +1768,7 @@ const folderAnalem = folderGnomon.addFolder("Analematic gnomon");
                     cs.hgnomon=e;
                     gnomon.scale.y=cs.hgnomon;
                     gnomon.position.z=(cs.hgnomon+cs.epaisseur)/2
-					PlacerBoutGnomon() })
+					  })
                   .onFinishChange(function(){TracerHeuresEtArcs()});				
                 folderGnomonClassic.add( cs, "vgnomon" )
 				  .name("straight style visible")
@@ -1926,14 +1845,14 @@ const folderAnalem = folderGnomon.addFolder("Analematic gnomon");
 				folderGnomonPosition.add( cs, "xgnomon", -1000, 1000, 0.1 )
 				  .name(">")
 				  .onChange(function(){
-					gnomon.position.x=cs.xgnomon;PlacerBoutGnomon()
+					gnomon.position.x=cs.xgnomon; 
 					TracerStyle()
 					gnomon.visible=(cs.vgnomon && cs.typeCadran==SP)})
 				  .onFinishChange(function(){TracerHeuresEtArcs()})
 				folderGnomonPosition.add( cs, "ygnomon", -1000, 1000, 0.1 )
 				    .name("^")
                 	.onChange(function(){
-					gnomon.position.y=cs.ygnomon;PlacerBoutGnomon()
+					gnomon.position.y=cs.ygnomon; 
 					TracerStyle()
 					gnomon.visible=(cs.vgnomon && cs.typeCadran==SP)})
 				  	.onFinishChange(function(){TracerHeuresEtArcs()})
@@ -1943,7 +1862,7 @@ const folderAnalem = folderGnomon.addFolder("Analematic gnomon");
 				  .onChange(function(){
 					gnomon.scale.x=cs.egnomon;
 				    gnomon.scale.z=cs.egnomon; 
-					PlacerBoutGnomon()
+					 
 					TracerHeuresEtArcs()});		
 
 
@@ -2340,12 +2259,12 @@ const folderHours= gui.addFolder( sp+'Hours' );
                gnomon.rotation.x = Math.PI*0.5;
                gnomon.castShadow = true; //default is false
 			   
-			   PlacerBoutGnomon()
+			    
 
 			   cadranSolaireGroup.add( cadran );
-			   cadranSolaireGroup.add( gnomon );
-			   cadranSolaireGroup.add( boutGnomon );
-			   cadranSolaireGroup.add( debutGnomon );
+			//    cadranSolaireGroup.add( gnomon );
+			//    cadranSolaireGroup.add( boutGnomon );
+			//    cadranSolaireGroup.add( debutGnomon );
 			  // cadranSolaireGroup.add( boutGnomon );
 
 			   orienterAxedumonde()
@@ -2401,23 +2320,9 @@ const folderHours= gui.addFolder( sp+'Hours' );
                TracerHeuresEtArcs()
 			   //console.log (window.location.href);
 
-	//console.log (POLYHEDRA.Cube.vertex[0])	
-	//ConstruirePolyHedre(POLYHEDRA.Cube);
    }//init
 
-function PlacerBoutGnomon(){
-	        //    boutGnomon.position.x=gnomon.position.x
-			//    boutGnomon.position.y=gnomon.position.y
-			//    boutGnomon.position.z=cs.hgnomon +cs.epaisseur/2
-			 
-			   boutGnomon.scale.x=cs.egnomon
-			   boutGnomon.scale.y=cs.egnomon
-			   boutGnomon.scale.z=cs.egnomon
-			   debutGnomon.scale.x=cs.egnomon
-			   debutGnomon.scale.y=cs.egnomon
-			   debutGnomon.scale.z=cs.egnomon
 
-}
 
 //  EXPORT---------------------------------------------------------------------------------
 
