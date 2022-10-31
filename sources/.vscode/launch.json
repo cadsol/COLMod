@@ -10,7 +10,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Open colmod.html",
-            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod.html"
+            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod22-10-24.html"
         }
     ]
 }

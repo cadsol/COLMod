@@ -119,6 +119,7 @@ export let  cs ={    version:"",
 				          voirTerre:true,
 				          vrotscene:0,					      
 						  vrotSun:0,
+						  //comments:"http://",
 						  //backgroundColor
 						  background:"rgb(22,35,39)",
 						  //export
