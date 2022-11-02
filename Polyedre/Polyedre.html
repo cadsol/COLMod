@@ -78,20 +78,31 @@
 				group = new THREE.Group();
 				scene.add( group );
 
+
+
+
+
 				// points
 
-				let dodecahedronGeometry = new THREE.DodecahedronGeometry( 10 );
+				let polyedreGeometry = new THREE.BoxGeometry( 10,10,10 );
 
 				// if normal and uv attributes are not removed, mergeVertices() can't consolidate indentical vertices with different normal/uv data
 
-				dodecahedronGeometry.deleteAttribute( 'normal' );
-				dodecahedronGeometry.deleteAttribute( 'uv' );
+				polyedreGeometry.deleteAttribute( 'normal' );
+				polyedreGeometry.deleteAttribute( 'uv' );
 
-				dodecahedronGeometry = BufferGeometryUtils.mergeVertices( dodecahedronGeometry );
+				//polyedreGeometry = BufferGeometryUtils.mergeVertices( polyedreGeometry );
+				const obj = BufferGeometryUtils.computeMorphedAttributes (polyedreGeometry ) 
+				const positionAttribute=obj.positionAttribute
+                const normalAttribute= obj.normalAttribute
+
+
+
+
 
 				const vertices = [];
-				const positionAttribute = dodecahedronGeometry.getAttribute( 'position' );
-
+		
+				
 				for ( let i = 0; i < positionAttribute.count; i ++ ) {
 
 					const vertex = new THREE.Vector3();
@@ -99,12 +110,28 @@
 					vertices.push( vertex );
 
 				}
+ 
+				console.log(vertices)
+
+			
+		
+            
+				const normales=[]
+				
+				for ( let i = 0; i < normalAttribute.count; i ++ ) {	
+					const vertexN = new THREE.Vector3();				
+					vertexN.fromBufferAttribute( normalAttribute, i );
+					normales.push( vertexN );
+					}
+				
+				console.log(normales)
+
 
 				const pointsMaterial = new THREE.PointsMaterial( {
 
 					color: 0x0080ff,
 					map: texture,
-					size: 1,
+					size: 0.5,
 					alphaTest: 0.5
 
 				} );
@@ -153,7 +180,7 @@
 
 				requestAnimationFrame( animate );
 
-				group.rotation.y += 0.005;
+				//group.rotation.y += 0.005;
 
 				render();
 
