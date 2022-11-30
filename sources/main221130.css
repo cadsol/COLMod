@@ -1,0 +1,156 @@
+ body {
+	margin: 0;
+	font-family: Monospace;
+	font-size: 13px;
+	line-height: 15px;
+	overscroll-behavior: none;
+	background-color: #000000;
+	cursor: default;
+} 
+
+a {
+	color:#2efa05 ;
+	text-decoration: none;
+  }
+
+a:hover {
+	text-decoration: underline;
+}
+
+
+#info {color: #fdf902;
+		position: absolute;
+		top: 10px;
+		width: 100%;
+		padding: 10px;	
+		text-align: center;	
+		
+}
+
+
+
+
+
+
+div.relative {
+	position: relative;
+	width: 400px;
+	height: 200px;
+	border: 3px solid #73AD21;
+  } 
+  
+div.absolute {
+	position: absolute;
+	top: 150px;
+	right: 0;
+	width: 600px;
+	height: 120px;
+	border: 3px solid #73AD21;
+  } 
+ 
+
+
+
+	#overlay button {
+		background: #9b1e1e;
+		border: 0;
+		border: 1px solid rgb(131, 61, 15);
+		border-radius: 4px;
+		color: #657e6e;
+		padding: 12px 18px;
+		text-transform: uppercase;
+		cursor: pointer;
+	} 
+  
+
+    p {
+      line-height: 16px;
+      padding-left: 10px;
+	  font-size: 0.8rem;
+    }  
+
+     label{      color: #cfcfcf;
+   
+		/* border: 1px  rgb(252, 252, 252); */
+		cursor: pointer;;
+		text-transform: uppercase;
+		background-color: rgb(0, 0, 0);
+		width: 200;
+		height: 50;
+		/*: #000000; */
+	
+	 }
+	
+     label:hover {
+      background-color: rgb(127 127 127);
+      }
+	
+	  button {
+		
+		/*text-transform: uppercase;*/
+	  	color: #000000;
+		  width: 150;
+		  height: 50;
+		/* height: auto; */
+	    /*	height: 40px;*/		
+	   } 
+
+	  button:hover {
+		background-color: rgb(173, 173, 165);
+		cursor: pointer;
+		}
+
+    img {
+     max-width: 100%; 
+     height: auto;
+     text-align: center;	
+     }
+
+	 #time {color: #d3d013;
+		position: absolute;
+		bottom: 10px;
+		left:10px;
+		width: auto;
+		padding: 5px;	
+		border: 1px solid rgb(221, 240, 116);
+		text-align: left;
+	}
+	
+	 #slider 
+	 {cursor: pointer;width: 100%;
+		/* -webkit-appearance: none;
+		bottom: 50px;
+		
+		height: 25px;
+		background: #d3d3d3;
+		outline: none;
+		opacity: 0.7;
+		 -webkit-transition: .2s;
+		transition: opacity .2s;  */
+
+		position: absolute;
+		bottom: 100px;
+		left:10px;
+		width: auto;
+	
+	  }
+	 
+	  .slider:hover {
+		opacity: 1;
+	  }
+ 	  
+	  .slider::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width:25px;
+		height: 50px;
+		background: #0f04aa;
+		
+	  }
+	  
+	  .slider::-moz-range-thumb {
+		width: 25px;
+		height: 25px;
+		background: #0415aa;
+		cursor: pointer;
+	  } 
