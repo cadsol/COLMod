@@ -9,10 +9,10 @@ import {
 } from '../astronomia-master/src/solstice.js';
 
 //export const SP = "Polar or straight style", BF = "Bifilar (vertical)", BFG = 'Bifilar generalised', ANL = 'Analemmatic';///+++
-export const SP = "Polar or straight style", BF = "Bifilar (vertical)", BFG = 'Bifilar generalised', ANL = 'Analemmatic';///+++
+export const SP = "Polar or straight style", BF = "Bifilar (vertical)", BFG = 'Bifilar generalised', ANL = 'Analemmatic', RTS='Ray tracing sundial';///+++
 
 
-
+ 
 export let cs = {
 	version: "",
 	hsol: 13,
@@ -21,6 +21,7 @@ export let cs = {
 
 	//geometry 
 	typeCadran: SP,// {value:SP,comment:"Sundial type"},
+	typeForme:"box",
 	largeur: 600,
 	hauteur: 400,
 	epaisseur: 30,
@@ -32,6 +33,7 @@ export let cs = {
 	egnomon: 1,
 	xgnomon: 0,
 	ygnomon: 100,
+	zgnomon: 70,
 	vgnomon: true,
 	vstyle: true,
 	vsousstyle: true,
