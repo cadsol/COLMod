@@ -21,7 +21,7 @@ export let cs = {
 
 	//geometry 
 	typeCadran: SP,// {value:SP,comment:"Sundial type"},
-	typeForme:"cylender",
+	typeForme:"box",
 	largeur: 600,
 	hauteur: 400,
 	epaisseur: 30,
@@ -33,7 +33,6 @@ export let cs = {
 	egnomon: 1,
 	xgnomon: 0,
 	ygnomon: 100,
-	zgnomon: 70,
 	vgnomon: true,
 	vstyle: true,
 	vsousstyle: true,
