@@ -853,9 +853,10 @@
 			if (cs.typeCadran == RTS){
 				const geoTore= new THREE.TorusGeometry(cs.egnomon*3,cs.egnomon,32,32)
 			    styleTorique= new THREE.Mesh(geoTore, materialGnomon);
+				cadranSolaireGroup.add(styleTorique);
 				styleTorique.position.set(cs.xgnomon,cs.ygnomon,cs.zgnomon)
 				styleTorique.castShadow = true;
-				cadranSolaireGroup.add(styleTorique);
+				
 			}
 
 
@@ -1565,6 +1566,7 @@
 					TS = TableSol(cs.year);
 					run();
 				}, false);
+				
 				if (file) {
 					reader.readAsText(file);
 				}
@@ -1620,7 +1622,7 @@
 			gnomon.rotation.x = Math.PI * 0.5;
 			gnomon.castShadow = true; //default is false
 			}
-
+		
 		//---------------------------------------------------------------------------------------------------------
 		function init() {
 
@@ -1630,6 +1632,51 @@
 			document.getElementById("info").style.display = "none";
 
 			// dat.GUI ///////////////////////////////////////////////////////////////////////////////////////
+			
+		//
+		function TracerCadranRTS(v) {
+					cadranSolaireGroup.clear()
+					if (v == "box") { cadran = cadranBox.clone()}//; cs.epaisseur = cs.largeur }
+					if (v == "cylinder") { cadran = cadranCyl.clone()}//; cs.epaisseur = cs.largeur }
+					if (v == "cone") { cadran = cadranCone.clone()}//; cs.epaisseur = cs.largeur }
+					if (v == "sphere") { cadran = cadranSph.clone()}//; cs.epaisseur = cs.largeur; cs.hauteur = cs.largeur }
+					if (v == "Dolphins") {
+						const plyloader = new PLYLoader();
+						plyloader.load('./models/ply/ascii/dolphins.ply', function (LucyGeometry) {
+							LucyGeometry.computeVertexNormals()
+							const LucyMaterial = new THREE.MeshStandardMaterial({ color: 0x0000ff, flatShading: false });
+							const Lucymesh = new THREE.Mesh(LucyGeometry, LucyMaterial)
+							cadran.visible = false
+							Lucymesh.castShadow = true;
+							Lucymesh.receiveShadow = true;
+							cadranSolaireGroup.add(Lucymesh)
+							cadran = Lucymesh.clone()
+							cs.xgnomon = 0; cs.ygnomon = 70; cs.zgnomon = 500
+							Lucymesh.receiveShadow = true
+							folderDimensionsSundial.hide()
+							folderOrientationSundial.hide()
+							render()
+							TracerHeuresEtArcs()
+							TracerStyle()
+						})
+					} else {
+						cadran.scale.x = cs.largeur;
+						cadran.scale.y = cs.hauteur;
+						cadran.scale.z = cs.epaisseur
+					    folderDimensionsSundial.show()
+						folderOrientationSundial.show()
+						cs.xgnomon = 0; cs.ygnomon = cs.hauteur / 4;
+						cs.zgnomon = cs.epaisseur / 2 + cs.hgnomon
+					}
+					cadran.receiveShadow = true
+					gnomon.visible = false
+					cadranSolaireGroup.add(cadran);
+					PlacerLeSoleil()
+					render()
+					TracerHeuresEtArcs()
+					TracerStyle()
+				}
+
 
 
 			function initMenu(e) {
@@ -1639,6 +1686,7 @@
 				//TracerHeuresEtArcs()
 				cadranSolaireGroup.add(cadran);
 				folderDimensionsSundial.show()
+				folderOrientationSundial.show()
 				//cadranSolaireGroup.add(meshDevise);
 				if (e == SP) {
 					folderGnomonBifilaireVertical.hide();
@@ -1718,10 +1766,10 @@
 					folderHours.show();
 					folderArcs.show();
 					cs.typeCadran = RTS;
-					cs.vgnomon = true;
+					//cs.vgnomon = true;
 					//gnomon.position.z = (cs.hgnomon + cs.epaisseur) / 2
 					gnomon.visible = true
-					
+					TracerCadranRTS(cs.typeForme)
 					TracerHeuresEtArcs();
 					gtypeForme.enable()
 				}
@@ -1772,46 +1820,7 @@
 				});
 
 			const gtypeForme = gui.add(cs, "typeForme", ["box", "cylinder", "cone", "sphere", "Dolphins"]).name("form of sundial") ///+++
-				.onFinishChange(function (v) {
-					cadranSolaireGroup.clear()
-					if (v == "box") { cadran = cadranBox.clone(); cs.epaisseur = cs.largeur }
-					if (v == "cylinder") { cadran = cadranCyl.clone(); cs.epaisseur = cs.largeur }
-					if (v == "cone") { cadran = cadranCone.clone(); cs.epaisseur = cs.largeur }
-					if (v == "sphere") { cadran = cadranSph.clone(); cs.epaisseur = cs.largeur; cs.hauteur = cs.largeur }
-					if (v == "Dolphins") {
-						const plyloader = new PLYLoader();
-						plyloader.load('./models/ply/ascii/dolphins.ply', function (LucyGeometry) {
-							LucyGeometry.computeVertexNormals()
-							const LucyMaterial = new THREE.MeshStandardMaterial({ color: 0x0000ff, flatShading: false });
-							const Lucymesh = new THREE.Mesh(LucyGeometry, LucyMaterial)
-							cadran.visible = false
-							Lucymesh.castShadow = true;
-							Lucymesh.receiveShadow = true;
-							cadranSolaireGroup.add(Lucymesh)
-							cadran = Lucymesh.clone()
-							cs.xgnomon = 0; cs.ygnomon = 70; cs.zgnomon = 500
-							Lucymesh.receiveShadow = true
-							folderDimensionsSundial.hide()
-							render()
-							TracerHeuresEtArcs()
-							TracerStyle()
-						})
-					} else {
-						cadran.scale.x = cs.largeur;
-						cadran.scale.y = cs.hauteur;
-						cadran.scale.z = cs.epaisseur
-						folderDimensionsSundial.show()
-						cs.xgnomon = 0; cs.ygnomon = cs.hauteur / 4;
-						cs.zgnomon = cs.epaisseur / 2 + cs.hgnomon
-					}
-					cadran.receiveShadow = true
-					gnomon.visible = false
-					cadranSolaireGroup.add(cadran);
-					PlacerLeSoleil()
-					render()
-					TracerHeuresEtArcs()
-					TracerStyle()
-				})
+				.onFinishChange(function(v){TracerCadranRTS(v)} )
 
 
 			const Button2D = {
@@ -2557,7 +2566,7 @@
 				.name('SVG units')
 			//   .onChange(function(e){});
 
-			unitsSVG.disable();
+			
 
 			const separateurCSV = {
 				"semicolon": ";",
@@ -2570,6 +2579,7 @@
 
 			unitsSVG.disable();
 			sepCSV.disable()
+			unitsSVG.disable();
 
 			// // Exemples --------------------------------------------------------------------------------------
 
@@ -2669,7 +2679,7 @@
 
 			initMenu(cs.typeCadran)
 			scene.background = new THREE.Color(cs.background);
-
+			if (cs.typeCadran==RTS){ TracerCadranRTS(cs.typeForme)}
 			EcrireDevise(cs.devise, cs.positionDevisex, cs.positionDevisey)
 			TracerHeuresEtArcs()
 			//console.log (window.location.href);
