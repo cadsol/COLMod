@@ -124,6 +124,7 @@ export let cs = {
 	positionDevisey: -180,
 	deviseSize: 1,
 	axesESZ: true,
+	axesXYZ: true,
 	voirTerre: true,
 	vrotscene: 0,
 	vrotSun: 0,

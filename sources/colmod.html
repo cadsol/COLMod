@@ -9,7 +9,7 @@
 	<meta name="viewport"
 		content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0">
 <!--  FICHIER CSS---------------------------------------------------------------------------------------------------------- -->
-	<link type="text/css" rel="stylesheet" href="./main221130.css">
+	<link type="text/css" rel="stylesheet" href="./main2022-07-19.css">
 <!--  FICHIER CSS------------------------------------------------------------------------------------------------------------->
 </head>
 
@@ -83,18 +83,20 @@
 
 
 		const HS = "solar",
-			HLSA = "legal (summer autumn)",
-			HLWS = "legal (winter spring)", HA = "Antique",
+			HLSA = "legal (summer autumn)", HLWS = "legal (winter spring)", 
+			HA = "Antique",
 			HB = 'babylonic', HI = "italic",
-			HSDSA = "Sidereals (summer, autumn)",
-			HSDWS = "Sidereals (winter, spring)";
+			HSDSA = "Sidereals (summer, autumn)", HSDWS = "Sidereals (winter, spring)";
 
 // -----------------------------------COLVARS--------------------------------------------------------------------------------------------
 		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM } from './colvars.js';
 // --------------------------------------------------------------------------------------------------------------------------------------	
 
-		cs.version = "2023/01/04"
-
+		cs.version = "2023-01-14"
+        let dateJour = new Date()
+		//cs.hsol=dateJour.getHours()
+		cs.year=dateJour.getFullYear()
+		//console.log(dateJour)
 
 		let CSVtext = "", SVGtext = "", CSVephemerid = ""
 
@@ -172,7 +174,7 @@
 		buttonNewSundial.innerHTML = 'New Sundial';
 		const menu = document.getElementById('menu');
 		menu.appendChild(buttonNewSundial);
-		buttonNewSundial.addEventListener("click", function () {NouveauCadranRTS=true; run() });
+		buttonNewSundial.addEventListener("click", function () {NouveauCadran=true; run() });
 
 
 		//
@@ -195,7 +197,7 @@
 			arcsDiurnesListeMesh;
 
 		let analemGroup, analemListeMesh;   // +++
-		let NouveauCadranRTS=false
+		let NouveauCadran=false
 
 		cadranSolaireGroup = new THREE.Group();
 
@@ -247,7 +249,9 @@
 
 
 		const materialCS = new THREE.MeshStandardMaterial(
-			{ transparent: true, opacity: 0.8, roughness: 0.5, map: textureAcier });
+			{ transparent: true, opacity: 0.8, roughness: 0.5, map: textureAcier,side:THREE.FrontSide/*,shadowSide:THREE.BackSide*/ });
+		// const materialScaphe = new THREE.MeshStandardMaterial(
+		// 	{ transparent: true, opacity: 0.8, roughness: 0.5, map: textureAcier,side:THREE.DoubleSide/*,shadowSide:THREE.BackSide */ });
 		// *********************************************************************************************************************************
 		const geometryCSbox = new THREE.BoxGeometry(1, 1, 1);
 	    const geometryCScyl = new THREE.CylinderGeometry(0.5,0.5, 1,64,64);
@@ -255,22 +259,9 @@
 		const geometryCScone = new THREE.ConeGeometry(0.5,1,64,64);
 
 
-		// const shapeRect = new THREE.Shape( [ new THREE.Vector2( 0.5, 0.5 ), new THREE.Vector2( - 0.5, 0.5 ), new THREE.Vector2( - 0.5, - 0.5 ), new THREE.Vector2( 0.5, - 0.5 ), new THREE.Vector2( 0.5, 0.5 )] )
-		// const cerclePath = new THREE.EllipseCurve(
-		// 		0, 0,            // ax, aY
-		// 		10, 10,           // xRadius, yRadius
-		// 		0,  Math.PI,  // aStartAngle, aEndAngle
-		// 		false,            // aClockwise
-		// 		0                 // aRotation
-		// 	);
-		// //console.log(cerclePath)
-		// const pointsCercle = cerclePath.getPoints( 50 );	
-		// const geometryEquatorial = new THREE.ExtrudeGeometry(shapeRect,{steps:10,depth: 16,bevelEnabled: false,extrudePath:pointsCercle});
-
         
-			function CercleSetting(h,e, spline, nsteps) {
-				
-				const pipeSplineCRC = new THREE.CatmullRomCurve3(spline, false, 'chordal', 1);
+		function CercleSetting(h,e, spline, nsteps) {		
+				const pipeSplineCRC = new THREE.CatmullRomCurve3(spline, false)//, 'chordal', 1);
 				const recShape = new THREE.Shape()
 					.moveTo(h,e)
 					.lineTo(-h,e)
@@ -284,27 +275,29 @@
 				};
 				return { forme: recShape, setting: Settings }
 			}
-
 		const CerclePath = []
 				for (let index = 0; index < 101; index++) {
 					const a = index * Math.PI / 100
 					const r=0.5
-					const p3 = new THREE.Vector3( r* Math.cos(a), -r * Math.sin(a), 0)
+					const p3 = new THREE.Vector3( r* Math.cos(a), 0, -r * Math.sin(a))
 					CerclePath.push(p3)
 				}
 		const Cercle=CercleSetting (0.5,0.025,CerclePath,100)
 		//console.log(CerclePath)
 		const  EquatorialGeometry = new THREE.ExtrudeGeometry(Cercle.forme,Cercle.setting); 
-		// mesh = new THREE.Mesh( tubeGeometry, material)
+
+		const geometryScaphe = new THREE.SphereGeometry(0.5,64,64,Math.PI,Math.PI );
+		//radius : Float, widthSegments : Integer, heightSegments : Integer, phiStart : Float, phiLength : Float, thetaStart : Float, thetaLength : Float
+
 		
-		
-		//const geometryScaphe = new THREE.SphereGeometry(0.5,64,64,0,Math.PI );
 		// ***********************************************************************************************************************************
 		const cadranBox = new THREE.Mesh(geometryCSbox, materialCS);
 		const cadranCyl = new THREE.Mesh(geometryCScyl, materialCS);
 		const cadranSph = new THREE.Mesh(geometryCSsph, materialCS);
 		const cadranCone = new THREE.Mesh(geometryCScone, materialCS);
 		const cadranEquatorial=  new THREE.Mesh(EquatorialGeometry, materialCS);
+		
+		const cadranScaphe=  new THREE.Mesh(geometryScaphe, materialCS);
 		// const cadranScaphe = new THREE.Mesh(geometryScaphe, new THREE.MeshStandardMaterial(
 		// 	{ transparent: true, opacity: 0.8, roughness: 0.5,side: THREE.BackSide,shadowSide:THREE.BackSide, map: textureAcier }));
 		cadran=cadranBox.clone()
@@ -313,7 +306,7 @@
 		
 
 		const materialGnomon = new THREE.MeshStandardMaterial(
-			{ transparent: true, opacity: 1, roughness: 0.1, metalness: 0.5, side: THREE.DoubleSide, color: 0xffffff, map: textureAcier });
+			{ transparent: true, opacity: 1, roughness: 0.1, metalness: 0.5, side: THREE.DoubleSide, color: 0xffffff, map: textureAcier  });
 		const geometryGnomon = new THREE.CylinderGeometry(1, 1, 1, 16);
 		gnomon = new THREE.Mesh(geometryGnomon, materialGnomon);
 		//const geometryTore = new THREE.TorusGeometry();
@@ -389,6 +382,23 @@
 			Math.max(cs.largeur, cs.hauteur, cs.epaisseur),
 			0x00ff00, 30, 15);
 
+		const axeX = new THREE.ArrowHelper(
+			new THREE.Vector3(1,0,0),
+			new THREE.Vector3(0, 0, 0),
+			Math.max(cs.largeur, cs.hauteur, cs.epaisseur),
+			0xffff00, 30, 15);
+		const axeY = new THREE.ArrowHelper(
+			new THREE.Vector3(0,1,0),
+			new THREE.Vector3(0, 0, 0),
+			Math.max(cs.largeur, cs.hauteur, cs.epaisseur),
+			0x00ffff, 30, 15);
+		const axeZ = new THREE.ArrowHelper(
+			new THREE.Vector3(0,0,1),
+			new THREE.Vector3(0, 0, 0),
+			Math.max(cs.largeur, cs.hauteur, cs.epaisseur),
+			0xff00ff, 30, 15);
+	
+
 
 		let TS = TableSol(cs.year)
 		//  const dd=JULIAN.JDToCalendarGregorian(TS.solJuin)     
@@ -415,28 +425,6 @@
 		
 		window.addEventListener("keypress",kPress)
 
-	// PLY file
-		// let Lucy=new THREE.Mesh()
-
-		// const plyloader = new PLYLoader();
-		// plyloader.load('./models/ply/binary/Lucy100k.ply', function (LucyGeometry) {
-		// 	LucyGeometry.computeVertexNormals()
-		// 	const LucyMaterial = new THREE.MeshStandardMaterial({ color: 0x0000ff, flatShading: true });
-		// 	const Lucymesh = new THREE.Mesh(LucyGeometry, LucyMaterial)
-		// 	// mesh.position.x = - 0.2;
-		// 	// mesh.position.y = - 0.02;
-		// 	// mesh.position.z = - 0.2;
-		// 	//mesh.scale.multiplyScalar( 0.0006 );
-
-		// 	Lucymesh.castShadow = true;
-		// 	Lucymesh.receiveShadow = true;
-		// 	Lucymesh.rotateY(Math.PI)
-        //     cadranSolaireGroup.add(Lucymesh)
-			
-        //     Lucy=Lucymesh.clone()
-		// });
-
-
 
 		function kPress(evt){
 			if ((evt.ctrlKey)&&(evt.keyCode==10)){cs.autoCloseMenu= !cs.autoCloseMenu}
@@ -460,7 +448,7 @@
 				for (var k in csl) { cs[k] = csl[k] }
 				//console.log(JSON.stringify(cs,null,2));
 				TS = TableSol(cs.year);
-				NouveauCadranRTS=false
+				NouveauCadran=false
 			};
 
 			
@@ -476,21 +464,28 @@
 
 		}
 
-		function ligneCSV(texte,x0,y0){
-			const s=cs.separateurCSV
-			const xg=x0-cs.xgnomon
-			const yg=y0-cs.ygnomon
-			CSVtext+=texte+s+x0.toFixed(2)+s+y0.toFixed(2)+s+"  "+s+xg.toFixed(2)+s+yg.toFixed(2)+"\n"
-		}
+		function ligneCSV(texte, x0, y0, z0) {
+				const s = cs.separateurCSV
+				const xg = x0 - cs.xgnomon
+				const yg = y0 - cs.ygnomon
+				if (cs.typeCadran == RTS) {
+					CSVtext += texte + s + x0.toFixed(2) + s + y0.toFixed(2) + s + z0.toFixed(2) + s + "   " + s + xg.toFixed(2) + s + yg.toFixed(2) + "\n"
+				} else {
+					CSVtext += texte + s + x0.toFixed(2) + s + y0.toFixed(2) + s +         "   " + s + "   " + s + xg.toFixed(2) + s + yg.toFixed(2) + "\n"
+				}
+			}
 
 		function initCSVtext() {
 			let s=cs.separateurCSV
-			CSVtext = "CadsolOnLine      " + s + "   XO   " + s + "  YO  " +s+"       "+s+"  XG  "+s+"  YG   \n\n";
+			CSVtext = "CadsolOnLine      " + s + "   XO   " + s + "  YO  " +s+"   ZO   "+s+"       "+s+"  XG  "+s+"  YG   \n\n";
 			CSVtext += " Version: " + cs.version + "\n\n"
-			CSVtext +=" XO YO  origin : center of the sundial \n"
-			CSVtext +=" XG YG  origin : foot of the gnomon \n"
+			CSVtext +=" XO YO  ZO  origin : center of the sundial \n"
+			CSVtext +=" XG YG      origin : foot of the gnomon \n"
 			CSVtext += "\n\n";
 			CSVtext += "Sundial: "+cs.nameFile
+			CSVtext += "\n\n";
+			CSVtext+="Type of sundial : " +cs.typeCadran+"\n"
+			if(cs.typeCadran==RTS){CSVtext+="Form : "+cs.typeForme}
 			CSVtext += "\n\n";
 
 		}
@@ -762,7 +757,7 @@
 				zp = (cs.epaisseur + cs.egnomon) / 2;
 				pipeSpline.push(new THREE.Vector3(xp, yp, zp));
 				//CSVtext += "point: " + cs.separateurCSV + xp.toFixed(2) + cs.separateurCSV + yp.toFixed(2) + "\n";
-				ligneCSV("point",xp,yp)
+				ligneCSV("point",xp,yp,zp)
 				if (SVGtext.length > 0) {
 					xs = xp + cs.largeur / 2; ys = -yp + cs.hauteur / 2;
 					SVGtext += `${xs.toFixed(3)},${ys.toFixed(3)}   `
@@ -1108,7 +1103,7 @@
 						zp = sunDial.lines[i].points[p].z + cs.egnomon / 2;
 
 						pipeSpline.push(new THREE.Vector3(xp, yp, zp));
-						ligneCSV("point:",xp,yp)
+						ligneCSV("point:",xp,yp,zp)
 						//CSVtext += "point: " + cs.separateurCSV + xp.toFixed(2) + cs.separateurCSV + yp.toFixed(2) + "\n";
 						if (SVGtext.length > 0) {
 							xs = xp + cs.largeur / 2; ys = -yp + cs.hauteur / 2
@@ -1289,7 +1284,7 @@
 						yp = sunDial.lines[i].points[p].y + cs.ygnomon;
 						zp = sunDial.lines[i].points[p].z + cs.egnomon / 2;
 						pipeSpline.push(new THREE.Vector3(xp, yp, zp));
-						ligneCSV( "point: ",xp,yp)
+						ligneCSV( "point: ",xp,yp,zp)
 						//CSVtext += "point: " + cs.separateurCSV + xp.toFixed(2) + cs.separateurCSV + yp.toFixed(2) + "\n"
 						if (SVGtext.length > 0) {
 							xs = xp + cs.largeur / 2; ys = -yp + cs.hauteur / 2
@@ -1628,6 +1623,8 @@
 					reader.readAsText(file);
 				}
 
+				//console.log(file)
+
 				return reader.result;
 			}
 		
@@ -1672,12 +1669,15 @@
 			gnomon.position.x = cs.xgnomon;
 			gnomon.position.y = cs.ygnomon;
 			gnomon.position.z = (cs.hgnomon + cs.epaisseur) / 2;
+			
 
 			gnomon.scale.y = cs.hgnomon;
 			gnomon.scale.x = cs.egnomon;
 			gnomon.scale.z = cs.egnomon;
 			gnomon.rotation.x = Math.PI * 0.5;
 			gnomon.castShadow = true; //default is false
+
+			
 			}
 		
 		//---------------------------------------------------------------------------------------------------------
@@ -1694,48 +1694,79 @@
 		
 			function TracerCadranRTS(v) {
 				function TracerDauphins() {
+					cs.incli=90;cs.decli=0;eulerCsGroup()
+					cadranSolaireGroup.clear
 					const plyloader = new PLYLoader();
 					plyloader.load('./models/ply/ascii/dolphins.ply', function (LucyGeometry) {
 						LucyGeometry.computeVertexNormals()
 						const LucyMaterial = new THREE.MeshStandardMaterial({ color: 0x0000ff, flatShading: false });
 						Lucymesh = new THREE.Mesh(LucyGeometry, LucyMaterial)
-						cadran.visible = false
-						Lucymesh.castShadow = true;
-						Lucymesh.receiveShadow = true;
-						cadranSolaireGroup.add(Lucymesh)
 						cadran = Lucymesh.clone()
+						//cadran.visible = false
+						//cadran.castShadow = true;
+						cadran.receiveShadow = true;
+						
+						cadranSolaireGroup.add(cadran)
+						
 						cs.xgnomon = 0; cs.ygnomon = 70; cs.zgnomon = 500
-						Lucymesh.receiveShadow = true
+						
 						folderDimensionsSundial.hide()
-						folderOrientationSundial.hide()
-						TracerHeuresEtArcs()
+						folderOrientationSundial.hide()	
+						TracerHeuresEtArcs()					
 						TracerStyle()
 						render()})
 						}
-				function TracerSolide(){
-						if(NouveauCadranRTS==true){ cs.epaisseur = cs.largeur; cs.hauteur = cs.largeur;NouveauCadranRTS=false}
-						cadran.scale.x = cs.largeur;
-						cadran.scale.y = cs.hauteur;
-						cadran.scale.z = cs.epaisseur
-					    folderDimensionsSundial.show()
-						folderOrientationSundial.show()
-						cadranSolaireGroup.add(cadran);
+				function TracerSolide() {
+					//if(NouveauCadran==true){ cs.epaisseur = cs.largeur; cs.hauteur = cs.largeur;NouveauCadran=false}
+					if (NouveauCadran == true) {
+						cs.epaisseur = 300; cs.hauteur =300;cs.largeur=300
 						cs.xgnomon = 0; cs.ygnomon = cs.hauteur / 4;
 						cs.zgnomon = cs.epaisseur / 2 + cs.hgnomon
-						TracerHeuresEtArcs()
-						TracerStyle()
-						render()
-						}
+					}
+					cadran.scale.x = cs.largeur;
+					cadran.scale.y = cs.hauteur;
+					cadran.scale.z = cs.epaisseur
+					folderDimensionsSundial.show()
+					folderOrientationSundial.show()
+					cadranSolaireGroup.add(cadran);
+					
+					TracerHeuresEtArcs()
+					TracerStyle()
+					render()
+				}
 				function TracerCadranEquatorial(){
 					    cadranSolaireGroup.add(cadran);
 						folderDimensionsSundial.show()
 						folderOrientationSundial.show()
 						//axeMondeGroup.add(cadran)
+						if(NouveauCadran==true){
+						cs.epaisseur = 300; cs.hauteur =300;cs.largeur=300
+					    cs.xgnomon = 0; cs.ygnomon = 0;cs.zgnomon = 0
+						cs.incli=cs.lati}
 						cadran.scale.x = cs.largeur;
 						cadran.scale.y = cs.hauteur;
-						cadran.scale.z = cs.epaisseur/2
-					    cs.xgnomon = 0; cs.ygnomon = 0;cs.zgnomon = 0
-						cs.incli=cs.lati+90
+						cadran.scale.z = cs.epaisseur
+						
+						eulerCsGroup()						
+						TracerStyle()
+						TracerHeuresEtArcs()
+						render()
+				}
+				function TracerCadranScaphe(){
+					    materialCS.side=THREE.DoubleSide
+					    cadranSolaireGroup.add(cadran);
+						folderDimensionsSundial.show()
+						folderOrientationSundial.show()
+						//axeMondeGroup.add(cadran)
+						if(NouveauCadran==true){
+						   cs.epaisseur = 300; cs.hauteur =300;cs.largeur=300
+					   	   cs.xgnomon = 0; cs.ygnomon = 0;cs.zgnomon = 0
+						}
+						cadran.scale.x = cs.largeur;
+						cadran.scale.y = cs.hauteur;
+						cadran.scale.z = cs.epaisseur;
+					    
+						cs.incli=cs.lati
 						eulerCsGroup()						
 						TracerStyle()
 						TracerHeuresEtArcs()
@@ -1743,19 +1774,26 @@
 				}
 
 					cadranSolaireGroup.clear()
+					cadranSolaireGroup.add(axeX)
+			        cadranSolaireGroup.add(axeY)
+			        cadranSolaireGroup.add(axeZ)
+					materialCS.side=THREE.FrontSide
+					//console.log(cadranSolaireGroup)
 					if (v == "box") { cadran = cadranBox.clone();TracerSolide()}//; cs.epaisseur = cs.largeur }
 					if (v == "cylinder") { cadran = cadranCyl.clone();TracerSolide()}//; cs.epaisseur = cs.largeur }
 					if (v == "cone") { cadran = cadranCone.clone();TracerSolide()}//; cs.epaisseur = cs.largeur }
 					if (v == "sphere") { cadran = cadranSph.clone();TracerSolide()}//; cs.epaisseur = cs.largeur; cs.hauteur = cs.largeur }
 					if (v =="equatorial"){cadran = cadranEquatorial.clone(); TracerCadranEquatorial()}
+					if (v =="scaphe"){cadran = cadranScaphe.clone(); TracerCadranScaphe()}
 					if (v == "Dolphins") { TracerDauphins()} 
 					cadran.receiveShadow = true
 					gnomon.visible = false
-					//cadranSolaireGroup.add(cadran);
-					PlacerLeSoleil()					
+					//cadranSolaireGroup.add(cadran);									
 					TracerHeuresEtArcs()
 					TracerStyle()
-					render()
+					PlacerLeSoleil()	
+					
+					//render()
 				}
 
 
@@ -1763,12 +1801,28 @@
 			function initMenu(e) {
 				cadranSolaireGroup.clear();
 				cadran=cadranBox.clone()
+				if (NouveauCadran == true) {
+					cs.largeur = 600
+					cs.hauteur = 400
+					cs.epaisseur = 30
+					cs.decli = 0
+					cs.incli = 90
+					cs.hgnomon = 50,
+					cs.egnomon = 1,
+					cs.xgnomon = 0,
+					cs.ygnomon = 100,
+					cs.zgnomon = 70
+				}
+				cadranSolaireGroup.add(axeX)
+			    cadranSolaireGroup.add(axeY)
+			    cadranSolaireGroup.add(axeZ)
 				MiseEnPlaceCadranEtGnomon()
 				cadranSolaireGroup.add(cadran);
 				folderDimensionsSundial.show()
 				folderOrientationSundial.show()
 				gtypeForme.disable()
 				zPosController.disable()
+				
 				if (e == SP) {
 					folderGnomonBifilaireVertical.hide();
 					folderGnomonBifilaireGen.hide();
@@ -1780,6 +1834,7 @@
 					folderArcs.show();
 					cs.typeCadran = SP;
 					cs.vgnomon = true;
+					gnomon.position.z = (cs.hgnomon + cs.epaisseur) / 2
 					gnomon.visible = true
 					TracerHeuresEtArcs();				
 				};
@@ -1874,8 +1929,8 @@
 
 			const guihsol = gui.add(cs, "hsol", 0, 24, 0.01)
 				.name("Hour  (0-24)")
-				.onChange(function (e) { PlacerLeSoleil() });
-			helpGui(guihsol, 'decimal hour')
+				.onChange(function () { PlacerLeSoleil() });
+			helpGui(guihsol, 'Decimal hour')
 
 			const guiday = gui.add(cs, "dayofYear", 1, 365, 1)
 				.name("Day (1-365))")
@@ -1883,7 +1938,7 @@
 					PlacerLeSoleil();
 					if (cs.typeCadran == ANL) TracerStyle();
 				});
-			helpGui(guiday, 'day of the year')
+			helpGui(guiday, 'Day of the year')
 
 			const guiyear = gui.add(cs, "year")
 				.name("Year")
@@ -1897,7 +1952,7 @@
 					initMenu(e)
 				});
 
-			const gtypeForme = gui.add(cs, "typeForme", ["box", "cylinder", "cone", "sphere","equatorial", "Dolphins"]).name("form of sundial") ///+++
+			const gtypeForme = gui.add(cs, "typeForme", ["box", "cylinder", "cone", "sphere","equatorial","scaphe", "Dolphins"]).name("form of sundial") ///+++
 				.onFinishChange(function(v){TracerCadranRTS(v)} )
 
 
@@ -1954,6 +2009,7 @@
 					PlacerLaTerre();//eulerEarthGroup()
 					PlacerLeSoleil(); TracerHeuresEtArcs()
 					if((cs.typeCadran==RTS)&&(cs.typeForme=="equatorial")){TracerCadranRTS("equatorial")}
+					if((cs.typeCadran==RTS)&&(cs.typeForme=="scaphe")){TracerCadranRTS("scaphe")}
 				})
 				.listen();
 			folderGeoSundial.add(cs, "longi", -180, 180, 0.001)
@@ -1984,6 +2040,7 @@
 						TracerHeuresEtArcs();
 						orienterAxedumonde();
 						PlacerLaTerre();
+						TracerHeuresEtArcs()
 						window.open(cs.urlOpenStreet, "OSM", "toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=400,height=400")
 					}
 				}
@@ -2511,6 +2568,9 @@
 
 			folderView.add(cs, "axesESZ").name("East,South,Zenith")
 				.onChange(function (e) { cs.axesESZ = e; axesESZHelper.visible = e });
+			
+			folderView.add(cs, "axesXYZ").name("axes X,Y,Z")
+				.onChange(function (e) { axeX.visible = e;axeY.visible = e;axeZ.visible = e });
 
 			folderView.add(cs, "voirTerre").name("Earth")
 				.onChange(function (e) {
@@ -2716,10 +2776,20 @@
 			// helpers 
 			const axesESZHelper = new THREE.AxesHelper(Math.max(cs.largeur, cs.hauteur, cs.epaisseur));
 			scene.add(axesESZHelper);
+			const axesXYZHelper = new THREE.AxesHelper(Math.max(cs.largeur, cs.hauteur, cs.epaisseur));
+			// scene.add(axesXYZHelper);
+			// cadranSolaireGroup.add(axesXYZHelper);axesXYZHelper.visible=true
 			// 				const camHelper = new THREE.CameraHelper( light.shadow.camera );
 			//              scene.add(camHelper) 
 			//EcrireDevise(cs.devise,-cs.largeur/2*0.9,-cs.hauteur/2*0.9)
+			// const box = new THREE.BoxHelper( cadran, 0xffff00 );
+            // scene.add( box );
+			// const boxCadran = new THREE.Box3();
+			// boxCadran.setFromCenterAndSize( new THREE.Vector3( 0,0,0 ), new THREE.Vector3( 800,800,800 ) );
 
+			// const helperCadran = new THREE.Box3Helper( boxCadran, 0xffff00 );
+			// scene.add( helperCadran );
+			//cadranSolaireGroup.add(helperCadran);helperCadran.visible=true
 
 
 			const couleurMenu = "#C8FAFF"
@@ -2850,7 +2920,7 @@
 
 			sphereSun.getWorldPosition(v3);
 			light.position.set(v3.x, v3.y, v3.z).normalize();
-			light.castShadow = (v3.y > 0)  // le soleil dit être au desus de l'horizon	
+			light.castShadow = (v3.y > 0)  // le soleil dit être au dessus de l'horizon	
 			
 			labeltime.innerHTML = h + ":" + min + ':' + sec + "  " + sdate + " dec:" + dec.toFixed(3) + "°  eqt:" + eqt + 's'
 			//labeldeceqt.innerHTML="dec:"+dec.toFixed(3)+"°  eqt:"+eqt+'s'
