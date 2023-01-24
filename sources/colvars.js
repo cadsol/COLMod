@@ -64,8 +64,8 @@ export let cs = {
 	hB2: 50, xB2: 0, yB2: 200,  //support2 du fil B
 
 	//colors sundial
-	colorCS: "rgb(200,200,200)",
-	emissiveCS: "rgb(100,100,100)",
+	colorCS: "rgb(250,250,250)",
+	emissiveCS: "rgb(150,150,150)",
 	specularCS: "rgb(0,0,0)",
 	metalness: 0.5,
 	opaciteCS: 0.8,
@@ -132,7 +132,7 @@ export let cs = {
 	autoCloseMenu: false,
 	//comments:"http://",
 	//backgroundColor
-	background: "rgb(22,35,39)",
+	background: "rgb(60,60,60)",
 	//export
 	unitSVG: 'auto',
 	separateurCSV: ";",
@@ -425,7 +425,34 @@ export function eclair() {
 	return [amn, a1, a2, amx];
 }
 
+// Import
 
+// var form = document.createElement( 'form' );
+// form.style.display = 'none';
+// document.body.appendChild( form );
+
+// var fileInput = document.createElement( 'input' );
+// fileInput.multiple = true;
+// fileInput.type = 'file';
+// fileInput.addEventListener( 'change', function () {
+
+// 	editor.loader.loadFiles( fileInput.files );
+// 	form.reset();
+
+// } );
+// form.appendChild( fileInput );
+
+// var option = new UIRow();
+// option.setClass( 'option' );
+// option.setTextContent( strings.getKey( 'menubar/file/import' ) );
+//option.onClick( function () {
+
+//	fileInput.click();
+
+//} );
+//options.add( option );
+
+//
 
 
 
