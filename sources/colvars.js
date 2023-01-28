@@ -69,7 +69,7 @@ export let cs = {
 	specularCS: "rgb(0,0,0)",
 	metalness: 0.5,
 	opaciteCS: 0.8,
-	//texture:'acier',
+	texture:'acier',
 
 	//geolocation
 	lati: 43.6,

@@ -123,7 +123,7 @@
 		const light = new THREE.DirectionalLight(0xffffff);
 		light.position.set(0, 1, 1).normalize();
 
-		const ambientLight = new THREE.AmbientLight(0x505050); // soft white light
+		const ambientLight = new THREE.AmbientLight(0x252525); // soft white light
 		//const ambientLight = new THREE.LightProbe(); 
 		scene.add(ambientLight);
 
@@ -144,11 +144,11 @@
 		//scene.add( helperLight );
 
 		// renderer
-		THREE.ColorManagement.legacyMode = false;
+		//THREE.ColorManagement.legacyMode = false;
 		renderer = new THREE.WebGLRenderer({ antialias: true });
 		renderer.setPixelRatio(window.devicePixelRatio);
 		renderer.setSize(window.innerWidth, window.innerHeight);
-		//renderer.outputEncoding = THREE.sRGBEncoding;
+		//renderer.outputEncoding = THREE.RGBEncoding;
 		renderer.toneMapping=THREE.LinearToneMapping;
 		renderer.shadowMap.enabled = true;
 		//renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
@@ -264,7 +264,7 @@
 
 
 		const materialCS = new THREE.MeshStandardMaterial(
-			{ transparent: true, opacity: 0.8, roughness: 0.5, map: textureAcier,side:THREE.FrontSide/*,shadowSide:THREE.BackSide*/ });
+			{ transparent: true, opacity: 0.8, roughness: 0.5, map:cs.texture,side:THREE.FrontSide/*,shadowSide:THREE.BackSide*/ });
 		// const materialScaphe = new THREE.MeshStandardMaterial(
 		// 	{ transparent: true, opacity: 0.8, roughness: 0.5, map: textureAcier,side:THREE.DoubleSide/*,shadowSide:THREE.BackSide */ });
 		// *********************************************************************************************************************************
@@ -1826,6 +1826,7 @@ earthGroup.add( meshClouds );
 									objloader.load(dataURL, function (LucyMesh) {
 										cadran = LucyMesh.clone()
 										cadranSolaireGroup.add(cadran)
+										cadran.receiveShadow = true
 									}
 									)
 								}
@@ -1836,6 +1837,7 @@ earthGroup.add( meshClouds );
 										Lucymesh.geometry.computeVertexNormals()
 										cadran = Lucymesh.clone()
 										cadranSolaireGroup.add(cadran)
+										cadran.receiveShadow = true
 									}
 									)
 								}
@@ -2049,7 +2051,7 @@ earthGroup.add( meshClouds );
 
 			const gtypeForme = gui.add(cs, "typeForme", ["box", "cylinder", "cone", "sphere","equatorial","scaphe", "Dolphins","File..."])
 			                    .name("form of sundial") ///+++
-								.onFinishChange(function(v){TracerCadranRTS(v)} )
+								.onFinishChange(function(v){TracerCadranRTS(v);cs.typeForme=''} )
       
 
 			const Button2D = {
@@ -2415,6 +2417,7 @@ earthGroup.add( meshClouds );
 			materialCS.metalness = cs.metalness;
 			materialCS.transparent = true;
 			materialCS.opacity = cs.opaciteCS;
+			materialCS.map=texture
 			folderColorsSundial.addColor(cs, 'colorCS').name('reflection').onChange(function (e) {
 				materialCS.color = new THREE.Color(e);
 				cs.colorCS = materialCS.color.getStyle();
@@ -2450,6 +2453,7 @@ earthGroup.add( meshClouds );
 			folderColorsSundial.add(choixTextures, 'steel', choixTextures).name('Texture')
 				.onChange(function (t) {
 					materialCS.map = t
+					cs.texture=t
 				});
 
 			//let  heure= {nom:"Solar (local true time)",trace:true,couleur:cs.colorHS,tailleFonte:cs.textSizeHS}     
@@ -2559,7 +2563,7 @@ earthGroup.add( meshClouds );
 			folderHoursOptions.add(cs, 'hoursTextSize', 0, 5, 0.1).name('Font size')
 
 			const subDiv = {
-				"12 h (meridienne)":12,
+				"meridienne":12,
 				"1 heure": 1,
 				"30 min": 0.5,
 				"15 min": 0.25,
@@ -2769,34 +2773,34 @@ earthGroup.add( meshClouds );
 			}
 			
 
-			const ButtonUpload = {
-				functionUpload() {
-					var form = document.createElement('form');
-					form.style.display = 'none';
-					document.body.appendChild(form);
+			// const ButtonUpload = {
+			// 	functionUpload() {
+			// 		var form = document.createElement('form');
+			// 		form.style.display = 'none';
+			// 		document.body.appendChild(form);
 
-					var fileInput = document.createElement('input');
-					fileInput.multiple = false;
-					fileInput.type = 'file';
-					fileInput.addEventListener('change', function () {
-						//console.log(fileInput.files[0])
-						//form.reset();
-						const reader = new FileReader();
-						reader.addEventListener("load"
-							, () => {
-								console.log(reader.result)
-							}
-							, false);
-						//reader.readAsText(fileInput.files[0])
-						reader.readAsDataURL(fileInput.files[0]);
-						//console.log(file)
-					});
-					form.appendChild(fileInput);
-					fileInput.click();
-				}
-			}
+			// 		var fileInput = document.createElement('input');
+			// 		fileInput.multiple = false;
+			// 		fileInput.type = 'file';
+			// 		fileInput.addEventListener('change', function () {
+			// 			//console.log(fileInput.files[0])
+			// 			//form.reset();
+			// 			const reader = new FileReader();
+			// 			reader.addEventListener("load"
+			// 				, () => {
+			// 					console.log(reader.result)
+			// 				}
+			// 				, false);
+			// 			//reader.readAsText(fileInput.files[0])
+			// 			reader.readAsDataURL(fileInput.files[0]);
+			// 			//console.log(file)
+			// 		});
+			// 		form.appendChild(fileInput);
+			// 		fileInput.click();
+			// 	}
+			// }
 
-			folderFiles.add(ButtonUpload, 'functionUpload').name('Upload');
+//			folderFiles.add(ButtonUpload, 'functionUpload').name('Upload');
 
 			folderFiles.add(ButtonDownload, 'functionDownload').name('Download');
 			folderFiles.add(cs, "nameFile").name("File name")
@@ -2912,7 +2916,7 @@ earthGroup.add( meshClouds );
 
 
 			// helpers 
-			const axesESZHelper = new THREE.AxesHelper(600);
+			const axesESZHelper = new THREE.AxesHelper(800);
 			scene.add(axesESZHelper);
 			
 
@@ -2939,6 +2943,7 @@ earthGroup.add( meshClouds );
 
 			initMenu(cs.typeCadran)
 			scene.background = new THREE.Color(cs.background);
+			
 			if (cs.typeCadran==RTS){ TracerCadranRTS(cs.typeForme)}
 			EcrireDevise(cs.devise, cs.positionDevisex, cs.positionDevisey)
 			TracerHeuresEtArcs()
