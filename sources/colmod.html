@@ -54,9 +54,9 @@
 	<script type="module">
 		document.body.style.cursor = "wait"
 
-		import * as THREE from '../build/three.module.js';  //146dev
+		import * as THREE from '../build/three.module.js';  //version 149
 		import Stats from './jsm/libs/stats.module.js';
-		import { GUI } from './jsm/libs/lil-gui.module.min.js';
+		import { GUI } from './jsm/libs/lil-gui.module.min.js';     //version 0.17.0
 
 		import { OrbitControls } from './jsm/controls/OrbitControls.js';
 		import { apparentEquatorial } from '../astronomia-master/src/solar.js';
@@ -94,7 +94,7 @@
 		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM } from './colvars.js';
 // --------------------------------------------------------------------------------------------------------------------------------------	
 
-		cs.version = "2023-02-17"
+		cs.version = "2023-02-15"
         let dateJour = new Date()
 		//cs.hsol=dateJour.getHours()
 		cs.year=dateJour.getFullYear()
@@ -115,7 +115,7 @@
 
 		// scene
 		scene = new THREE.Scene();
-		scene.background= new THREE.Color(cs.background)
+		//scene.background= new THREE.Color(cs.background)
 		//console.log(localStorage.getItem("BackGround"))
 		//scene.background = new THREE.Color(localStorage.getItem("BackGround"))
 	
@@ -238,12 +238,23 @@
 		//const texture = new THREE.TextureLoader().load( 'metaltexture.jpg' );
 		// const materialCST = new THREE.MeshBasicMaterial( { map: texture } );
 		const textureAcier = new THREE.TextureLoader().load('metaltexture.jpg')
+		textureAcier.name='steel'
 		const textureCuivre = new THREE.TextureLoader().load('metall001-new-tileable.png');
-		const textureFruits = new THREE.TextureLoader().load('fruits.jpg');
+		textureCuivre.name='copper'
+		const textureFruits = new THREE.TextureLoader().load('fruits.jpg')
+		textureFruits.name='fruits'
 		const textureAsphalt = new THREE.TextureLoader().load('asphalt.jpg')
+		textureAsphalt.name='asphalt'
 		const textureBois = new THREE.TextureLoader().load('./textures/hardwood2_diffuse.jpg');
+		textureBois.name='wood'
 		const textureEau = new THREE.TextureLoader().load('./textures/waternormals.jpg');
-		let texture = textureAcier
+		textureEau.name='water'
+
+
+		const choixTextures = { 'none':null,'steel': textureAcier, 'copper': textureCuivre,'water':textureEau, 
+			                        'asphalt': textureAsphalt,'wood':textureBois,'fruits': textureFruits}
+		//let texture = textureAcier
+		
 		const optionsMaterial = { roughness: 0.5, metalness: 0.5, transparent: true, opacity: 1, side: THREE.DoubleSide, map: null }
 		const materialHeuresSolaires = new THREE.MeshStandardMaterial(optionsMaterial);
 		const materialHeuresLegalesSA = new THREE.MeshStandardMaterial(optionsMaterial);
@@ -401,6 +412,29 @@ earthGroup.add( meshClouds );
 			600,
 			0xffffff, 30, 15);
 		earthGroup.add(axeTerre);
+
+	// 	scene.background = new THREE.CubeTextureLoader()
+	// .setPath( './images/' )\\ds415\web\CadsolOnLine\sources\textures\cube\MilkyWay\dark-s_nx.jpg
+	// .load( [
+	// 	'1.jpg',
+	// 	'2.jpg',
+	// 	'3.jpg',
+	// 	'4.jpg',
+	// 	'5.jpg',
+	// 	'6.jpg'
+	// ] );
+
+	// scene.background = new THREE.CubeTextureLoader()
+	// .setPath( './textures/cube/MilkyWay/' ) //\\ds415\web\CadsolOnLine\sources\textures\cube\MilkyWay\dark-s_nx.jpg
+	// .load( [
+	// 	'dark-s_nx.jpg',
+	// 	'dark-s_ny.jpg',
+	// 	'dark-s_nz.jpg',
+	// 	'dark-s_px.jpg',
+	// 	'dark-s_py.jpg',
+	// 	'dark-s_pz.jpg'
+	// ] );
+
 
 
 		const axeLocalisation = new THREE.ArrowHelper(
@@ -1696,20 +1730,19 @@ earthGroup.add( meshClouds );
 			gnomon.scale.x = cs.egnomon;
 			gnomon.scale.z = cs.egnomon;
 			gnomon.rotation.x = Math.PI * 0.5;
-			gnomon.castShadow = true; //default is false
-
-			
+			gnomon.castShadow = true; //default is false			
 			}
 		////
 		function EcrireXYZ(){
 			const ht=cs.hoursTextSize
-			cs.hoursTextSize = 3             
-				if (cs.axesXYZ == true) {
-					EcrireTexte('x', 810, 0, 0, materialAxeX, groupAxes, labelAxesListeMesh)
-					EcrireTexte('y', 0, 810, 0, materialAxeY, groupAxes, labelAxesListeMesh)
+			cs.hoursTextSize = 3      
+			effacelisteMesh(labelAxesListeMesh,groupAxes)       
+			if (cs.axesXYZ == true) {
+					EcrireTexte(' x', 850, 0, 0, materialAxeX, groupAxes, labelAxesListeMesh)
+					EcrireTexte(' y', 0, 850, 0, materialAxeY, groupAxes, labelAxesListeMesh)
 					EcrireTexte('z', 0, 0, 810, materialAxeZ, groupAxes, labelAxesListeMesh)
 					cadranSolaireGroup.add(groupAxes)
-				}else{ effacelisteMesh(labelAxesListeMesh,groupAxes) }
+				}
 			cs.hoursTextSize=ht
 		}
 	
@@ -1826,9 +1859,11 @@ earthGroup.add( meshClouds );
 						reader.addEventListener("load"
 							, () => {
 								dataURL = reader.result
+								
 								if (NF.lastIndexOf('.obj') > 0) {
 									objloader.load(dataURL, function (LucyMesh) {
 										cadran = LucyMesh.clone()
+										//cadran.material=materialCS
 										cadranSolaireGroup.add(cadran)
 										cadran.receiveShadow = true
 										TracerHeuresEtArcs()
@@ -1841,8 +1876,8 @@ earthGroup.add( meshClouds );
 								}
 								if (NF.lastIndexOf('.ply') > 0) {
 									plyloader.load(dataURL, function (LucyGeom) {
-										const LucyMaterial = new THREE.MeshStandardMaterial({ /*color: 0x0000ff,*/ flatShading: false });
-										const Lucymesh = new THREE.Mesh(LucyGeom, LucyMaterial)
+										//const LucyMaterial = new THREE.MeshStandardMaterial({ /*color: 0x0000ff,*/ flatShading: false });
+										const Lucymesh = new THREE.Mesh(LucyGeom, materialCS)
 										Lucymesh.geometry.computeVertexNormals()
 										cadran = Lucymesh.clone()
 										cadranSolaireGroup.add(cadran)
@@ -1851,7 +1886,8 @@ earthGroup.add( meshClouds );
 										TracerStyle()
 										PlacerLeSoleil()
 										effacelisteMesh(labelAxesListeMesh,groupAxes)
-										EcrireXYZ()										
+										EcrireXYZ()			
+										//console.log(dataURL)							
 									}
 									)
 								}
@@ -1864,12 +1900,8 @@ earthGroup.add( meshClouds );
 						        cadran.scale.y = cs.hauteur;
 						        cadran.scale.z = cs.epaisseur;	
 								eulerCsGroup()
-								// TracerHeuresEtArcs()
-								// TracerStyle()
-								// PlacerLeSoleil()
-								// render()
+								EcrireXYZ()	
 								cs.typeForme="box"
-								//gtypeForme.update()
 								
 							}
 							, false);
@@ -2439,7 +2471,7 @@ earthGroup.add( meshClouds );
 			materialCS.metalness = cs.metalness;
 			materialCS.transparent = true;
 			materialCS.opacity = cs.opaciteCS;
-			materialCS.map=texture
+			materialCS.map=choixTextures[cs.nameTexture] 
 			folderColorsSundial.addColor(cs, 'colorCS').name('reflection').onChange(function (e) {
 				materialCS.color = new THREE.Color(e);
 				cs.colorCS = materialCS.color.getStyle();
@@ -2448,14 +2480,17 @@ earthGroup.add( meshClouds );
 				materialCS.emissive = new THREE.Color(e);
 				cs.emissiveCS = materialCS.emissive.getStyle();
 			});
-			folderColorsSundial.add(materialCS, 'metalness', 0, 1, 0.1)
-			folderColorsSundial.add(materialCS, 'roughness', 0, 1, 0.1)
+			folderColorsSundial.add(materialCS, 'metalness', 0, 1, 0.01)
+				.onChange(function(e) {cs.metalness= materialCS.metalness})
+				
+			folderColorsSundial.add(materialCS, 'roughness', 0, 1, 0.01)
+				.onChange(function(e) {cs.roughness= materialCS.metalness})
 			//   folderColorsSundial.addColor(controlCS, 'specular').onChange(function (e) {
 			//        materialCS.specular = new THREE.Color(e);
 			//        cs.specularCS=materialCS.specular.getStyle();
 			//        });
 			//   folderColorsSundial.add(materialCS, 'shininess', 0, 100, )              
-			folderColorsSundial.add(cs, 'opaciteCS', 0, 1, 0.1)
+			folderColorsSundial.add(cs, 'opaciteCS', 0, 1, 0.01)
 				.name('opacity').onChange(function (e) {
 					materialCS.transparent = true;
 					cs.opaciteCS = e;
@@ -2463,6 +2498,7 @@ earthGroup.add( meshClouds );
 				});
 			folderColorsSundial.add(materialCS, 'wireframe')
 				.onChange(function (v) {
+					cs.wireframe=e
 					materialGnomon.wireframe = v;
 					materialHeuresSolaires.wireframe = v;
 					materialHeuresLegalesSA.wireframe = v;
@@ -2470,12 +2506,18 @@ earthGroup.add( meshClouds );
 					materialArcsDiurnes.wireframe = v
 				});
 
-			const choixTextures = { '?':null,'steel': textureAcier, 'copper': textureCuivre,'water':textureEau, 
-			                        'asphalt': textureAsphalt,'wood':textureBois,'fruits': textureFruits}
-			folderColorsSundial.add(choixTextures, 'steel', choixTextures).name('Texture')
+			
+			// folderColorsSundial.add(choixTextures, 'steel', choixTextures).name('Texture')
+			// 	.onChange(function (t) {
+			// 		materialCS.map = t
+			// 		materialCS.needsUpdate=true
+			// 	});
+
+			folderColorsSundial.add(cs, 'nameTexture', choixTextures).name('Texture')
 				.onChange(function (t) {
 					materialCS.map = t
-					//cs.texture=t
+					materialCS.needsUpdate=true
+					if (t==null) {cs.name='none'}else{cs.nameTexture=t.name}
 				});
 
 			//let  heure= {nom:"Solar (local true time)",trace:true,couleur:cs.colorHS,tailleFonte:cs.textSizeHS}     
@@ -2793,36 +2835,9 @@ earthGroup.add( meshClouds );
 					if (e =="Params (.HTML)"){saveString(HTLM(cs), cs.nameFile + '.html')}
 				}
 			}
-			
 
-			// const ButtonUpload = {
-			// 	functionUpload() {
-			// 		var form = document.createElement('form');
-			// 		form.style.display = 'none';
-			// 		document.body.appendChild(form);
 
-			// 		var fileInput = document.createElement('input');
-			// 		fileInput.multiple = false;
-			// 		fileInput.type = 'file';
-			// 		fileInput.addEventListener('change', function () {
-			// 			//console.log(fileInput.files[0])
-			// 			//form.reset();
-			// 			const reader = new FileReader();
-			// 			reader.addEventListener("load"
-			// 				, () => {
-			// 					console.log(reader.result)
-			// 				}
-			// 				, false);
-			// 			//reader.readAsText(fileInput.files[0])
-			// 			reader.readAsDataURL(fileInput.files[0]);
-			// 			//console.log(file)
-			// 		});
-			// 		form.appendChild(fileInput);
-			// 		fileInput.click();
-			// 	}
-			// }
-
-//			folderFiles.add(ButtonUpload, 'functionUpload').name('Upload');
+//			
 
 			folderFiles.add(ButtonDownload, 'functionDownload').name('Download');
 			folderFiles.add(cs, "nameFile").name("File name")
@@ -2911,9 +2926,6 @@ earthGroup.add( meshClouds );
 			RayTracingEx.add(objEx, 'myEx14').name("Declining Cone");
 
 
-
-
-
 			//generateGeometry;   
 
 			scene.add(axeLocalisation);
@@ -2967,7 +2979,12 @@ earthGroup.add( meshClouds );
 
 			initMenu(cs.typeCadran)
 			scene.background = new THREE.Color(cs.background);
-			
+			materialCS.opacity=cs.opaciteCS
+			materialCS.metalness=cs.metalness
+			materialCS.wireframe=cs.wireframe
+			materialCS.map = choixTextures[cs.nameTexture]
+			//console.log( cs.nameTexture,choixTextures[cs.nameTexture])
+			materialCS.needsUpdate=true
 			if (cs.typeCadran==RTS){ TracerCadranRTS(cs.typeForme)}
 			EcrireDevise(cs.devise, cs.positionDevisex, cs.positionDevisey)
 			TracerHeuresEtArcs()
@@ -3066,16 +3083,14 @@ earthGroup.add( meshClouds );
 			labeltime.innerHTML = h + ":" + min + ':' + sec + "  " + sdate + " dec:" + dec.toFixed(3) + "°  eqt:" + eqt + 's'
 			//labeldeceqt.innerHTML="dec:"+dec.toFixed(3)+"°  eqt:"+eqt+'s'
 			//  helperLight.update()
-			//scene.background = new THREE.Color( cs.background*((12-cs.hsol)/24) );
-			if (cs.typeCadran==RTS){
-				if (lineRay!=undefined){
+			
+			if (cs.typeCadran == RTS) {
+				if (lineRay != undefined) {
 					lineRay.geometry.dispose()
-					cadranSolaireGroup.remove( lineRay )
-				    }			
-				if(v3.y>0){CoordRayTracing((hsol-12)/12*Math.PI,TS.decSuns[cs.dayofYear - 1],true)}
+					cadranSolaireGroup.remove(lineRay)
+				}
+				if (v3.y > 0) { CoordRayTracing((hsol - 12) / 12 * Math.PI, TS.decSuns[cs.dayofYear - 1], true) }
 			}
-
-		    
 		}
 
 		function myTimerSun() {
@@ -3179,7 +3194,7 @@ earthGroup.add( meshClouds );
 			requestAnimationFrame(animate);
 
 			if (cs.vrotscene > 0) { scene.rotation.y += 0.001 * cs.vrotscene } else { scene.rotation.y = 0 };
-			meshClouds.rotation.y += 0.0001;
+			meshClouds.rotation.y += 0.00001;
 			render();
 			stats.update();
 
@@ -3193,20 +3208,22 @@ earthGroup.add( meshClouds );
 			renderer.render(scene, camera);
 
 		}
-var form = document.createElement( 'form' );
-form.style.display = 'none';
-document.body.appendChild( form );
 
-var fileInput = document.createElement( 'input' );
-fileInput.multiple = true;
-fileInput.type = 'file';
-fileInput.addEventListener( 'change', function () {
 
-	editor.loader.loadFiles( fileInput.files );
-	form.reset();
+// var form = document.createElement( 'form' );
+// form.style.display = 'none';
+// document.body.appendChild( form );
 
-} );
-form.appendChild( fileInput );
+// var fileInput = document.createElement( 'input' );
+// fileInput.multiple = true;
+// fileInput.type = 'file';
+// fileInput.addEventListener( 'change', function () {
+
+// 	editor.loader.loadFiles( fileInput.files );
+// 	form.reset();
+
+// } );
+// form.appendChild( fileInput );
 
 
 	</script>

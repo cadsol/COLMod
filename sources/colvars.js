@@ -68,8 +68,10 @@ export let cs = {
 	emissiveCS: "rgb(150,150,150)",
 	specularCS: "rgb(0,0,0)",
 	metalness: 0.5,
+	roughness:0.5,
 	opaciteCS: 0.8,
-	//texture:'acier',
+	wireframe:false,
+	nameTexture:"steel",
 
 	//geolocation
 	lati: 43.6,
@@ -132,7 +134,7 @@ export let cs = {
 	autoCloseMenu: false,
 	//comments:"http://",
 	//backgroundColor
-	background: "rgb(0,0,0)",
+	background: "rgb(0,0,0)",	
 	//export
 	unitSVG: 'auto',
 	separateurCSV: ";",
