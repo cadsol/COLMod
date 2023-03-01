@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>three.js webgl - convex geometry</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<link type="text/css" rel="stylesheet" href="main221130.css">
+</head>
+
+<body>
+
+	<div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - Poly AJL 28/2 geometry
+	</div>
+
+	<script type="module">
+
+
+		import * as THREE from '../build/three.module.js';  //version 149
+		//import Stats from './jsm/libs/stats.module.js';
+		import { GUI } from './jsm/libs/lil-gui.module.min.js';
+
+		import { OrbitControls } from './jsm/controls/OrbitControls.js';
+		import { ConvexGeometry } from './jsm/geometries/ConvexGeometry.js';
+		//import * as BufferGeometryUtils from './jsm/utils/BufferGeometryUtils.js';
+		import { POLYHEDRA } from './polyhedra.js';
+
+
+		let group, camera, scene, renderer, categoryFolders, meshPolyedre, meshFace,
+			nbFaces, nFace, guiSectionPoly, polyhedre;
+
+		init();
+		animate();
+
+		function init() {
+
+			scene = new THREE.Scene();
+
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.body.appendChild(renderer.domElement);
+
+			// camera
+
+			camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 1000);
+			camera.position.set(15, 20, 30);
+			scene.add(camera);
+
+			// controls
+
+			const controls = new OrbitControls(camera, renderer.domElement);
+			controls.minDistance = 1;
+			controls.maxDistance = 1000;
+			//controls.maxPolarAngle = Math.PI / 2;
+
+			// ambient light
+
+			scene.add(new THREE.AmbientLight(0x222222));
+
+			// point light
+
+			const light = new THREE.PointLight(0xffffff, 1);
+			camera.add(light);
+
+			// helper
+
+			scene.add(new THREE.AxesHelper(20));
+
+			// textures
+
+			const loader = new THREE.TextureLoader();
+			const texture = loader.load('./textures/sprites/disc.png');
+
+			//	
+			window.addEventListener('resize', onWindowResize);
+
+			group = new THREE.Group();
+			scene.add(group);
+
+			let sundial = { face: 0, trace: false };
+			let sundials = []
+
+
+
+			// convex hull
+
+			const meshMaterial = new THREE.MeshStandardMaterial({
+				color: 0xffffff,
+				opacity: 0.9,
+				//side: THREE.DoubleSide,
+				transparent: true,
+				//map: texture
+				//syze:0.1
+			});
+
+			const meshMaterialFace = new THREE.MeshStandardMaterial({
+				color: 0x0000ff,
+				opacity: 1,
+				side: THREE.DoubleSide,
+				transparent: true,
+				//map: texture
+				//syze:0.1
+			});
+
+
+
+			function displayPolyhedron(Pol) {
+				if (meshPolyedre != undefined) { group.remove(meshPolyedre) }
+
+				let verticesPolyedre = []
+				nbFaces = Pol.face.length
+				for (let i = 0; i < Pol.vertex.length; i++) {
+					const v = Pol.vertex[i]
+					const k = 5
+					const vertex = new THREE.Vector3(v[0] * k, v[1] * k, v[2] * k);
+					verticesPolyedre.push(vertex);
+				}
+				const meshGeometry = new ConvexGeometry(verticesPolyedre);
+				meshPolyedre = new THREE.Mesh(meshGeometry, meshMaterial);
+				group.add(meshPolyedre);
+				//meshPolyedre.lookAt(new THREE.Vector3(0,0,1000))
+				return meshPolyedre
+			}
+
+			function displayFace(Pol, nf) {
+				if (meshFace != undefined) { group.remove(meshFace) }
+				nbFaces = Pol.face.length
+				
+				const verticesFace = []
+				let sx = 0, sy = 0, sz = 0
+				for (let i = 0; i < Pol.face[nf].length; i++) {
+					const j = Pol.face[nf][i]
+					const v = Pol.vertex[j]
+					sx += v[0]; sy += v[1]; sz += v[2]
+					const k = 5
+					const verticeFace = new THREE.Vector3(v[0] * k, v[1] * k, v[2] * k);
+					verticesFace.push(verticeFace);
+				}
+				verticesFace.push(new THREE.Vector3(sx / nbFaces, sy / nbFaces, sz / nbFaces))
+				const meshGeometry = new ConvexGeometry(verticesFace);
+				meshFace = new THREE.Mesh(meshGeometry, meshMaterialFace);
+				group.add(meshFace);
+				nFace = nf
+				
+				return meshFace
+			}
+
+
+			function InitGui() {
+				const gui = new GUI(
+					{ width: Math.min(Math.round(window.innerWidth / 2), 280), title: "Edit polyhedric sundial..." }
+				);
+
+				categoryFolders = {};
+				let parameters = {}// {function(){}};
+				// check category[0]. if folder does not exist, create it, add it to that folder.
+				//   if category field DNE, just add it to the end.
+				//var guiSectionPol = gui.addFolder("Polyedra");
+
+				const guiSectionFace = gui.addFolder("Facet");
+
+				const choixFace = guiSectionFace.add(sundial, "face", 0, nbFaces - 1, 1)
+					.name(" number")
+					.onChange(f => {displayFace(polyhedre, f)
+					choixFace.max(nbFaces)
+				    choixFace.updateDisplay()})
+
+				const traceSundial = guiSectionFace.add(sundial, "trace");
+
+
+				const guiSectionPoly = gui.addFolder("Polyedra");
+				for (var arg in POLYHEDRA) {
+					var guiSection = guiSectionPoly;
+					if (POLYHEDRA[arg].hasOwnProperty("category")) {
+						var category = POLYHEDRA[arg].category[0];
+						if (!categoryFolders.hasOwnProperty(category))
+							categoryFolders[category] = guiSectionPoly.addFolder(category);
+						guiSection = categoryFolders[category];
+					}
+					parameters[arg] = function () { };
+					const g = guiSection.add(parameters, arg).name(POLYHEDRA[arg].name)
+					const a = arg
+					g.domElement.addEventListener("click", function () {
+						displayPolyhedron(POLYHEDRA[a])
+						displayFace(POLYHEDRA[a], 0)
+						polyhedre = POLYHEDRA[a]
+						sundials = []
+						for (let nf = 0; nf < nbFaces; nf++) { sundial = { face: nf, trace: false }, sundials.push(sundial) }
+					})
+				}
+
+				gui.open();
+			    guiSectionPoly.close()
+			}
+
+			
+			polyhedre = POLYHEDRA.Dodecahedron
+			displayPolyhedron(polyhedre)
+			
+			displayFace(polyhedre, 0)
+			InitGui()
+			
+			
+			scene.add(group)
+			
+			
+			//group.lookAt(new THREE.Vector3(0,0,-1))
+			console.log(meshPolyedre)
+
+
+		}
+
+		function onWindowResize() {
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+		}
+
+		function animate() {
+
+			requestAnimationFrame(animate);
+
+			//group.rotation.y += 0.005;
+
+			render();
+
+		}
+
+		function render() {
+
+			renderer.render(scene, camera);
+
+		}
+
+	</script>
+
+</body>
+
+</html>

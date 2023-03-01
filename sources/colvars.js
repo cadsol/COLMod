@@ -72,6 +72,8 @@ export let cs = {
 	opaciteCS: 0.8,
 	wireframe:false,
 	nameTexture:"steel",
+	dataURL:"",
+	typedataURL:'',
 
 	//geolocation
 	lati: 43.6,

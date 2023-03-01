@@ -5,21 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Chrome",
+            "name": "Open Polyedre.html",
             "request": "launch",
             "type": "chrome",
-            "url": "http://192.168.1.14/Parser/parser.js",
+            "url": "http://192.168.1.14/CadsolOnLine/sources/Polyedre.html",
             "webRoot": "${workspaceFolder}"
         },
-    
-    // {
-    //     "name": "Launch Edge",
-    //     "request": "launch",
-    //     "type": "msedge",
-    //     "url": "http://localhost:8080",
-    //     "webRoot": "${workspaceFolder}"
-    // }
-    
+        
         {
             "type": "chrome",
             "request": "launch",
