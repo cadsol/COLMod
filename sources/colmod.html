@@ -94,7 +94,7 @@
 		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM } from './colvars.js';
 // --------------------------------------------------------------------------------------------------------------------------------------	
 
-		cs.version = "2023-02-28"
+		cs.version = "2023-04-03"
         let dateJour = new Date()
 		//cs.hsol=dateJour.getHours()
 		cs.year=dateJour.getFullYear()
@@ -968,7 +968,8 @@ earthGroup.add( meshClouds );
 			cadranSolaireGroup.remove(styleTorique);
 
 			if (cs.typeCadran == RTS){
-				const geoTore= new THREE.TorusGeometry(cs.egnomon*4,cs.egnomon,32,32)
+				const k=Math.max(cs.egnomon,1)
+				const geoTore= new THREE.TorusGeometry(k*5,k,32,32)
 			    styleTorique= new THREE.Mesh(geoTore, materialSun);
 				cadranSolaireGroup.add(styleTorique);
 				styleTorique.position.set(cs.xgnomon,cs.ygnomon,cs.zgnomon)
