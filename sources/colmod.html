@@ -94,7 +94,7 @@
 		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM } from './colvars.js';
 // --------------------------------------------------------------------------------------------------------------------------------------	
 
-		cs.version = "2023-04-03"
+		cs.version = "2023-03-15"
         let dateJour = new Date()
 		//cs.hsol=dateJour.getHours()
 		cs.year=dateJour.getFullYear()
@@ -288,7 +288,7 @@
 
         
 		function CercleSetting(h,e, spline, nsteps) {		
-				const pipeSplineCRC = new THREE.CatmullRomCurve3(spline, false)//, 'chordal', 1);
+				const pipeSplineCRC = new THREE.CatmullRomCurve3(spline, false, 'chordal', 1)//, 'chordal', 1);
 				const recShape = new THREE.Shape()
 					.moveTo(h,e)
 					.lineTo(-h,e)
@@ -1362,7 +1362,7 @@ earthGroup.add( meshClouds );
 					if (SVGtext.length > 0) { SVGtext += `" />` }
 					if (pipeSpline.length > 1) {
 						pipeSplineCRC = [];
-						pipeSplineCRC = new THREE.CatmullRomCurve3(pipeSpline);
+						pipeSplineCRC = new THREE.CatmullRomCurve3(pipeSpline, false, 'chordal', 1);
 						tubeGeometry = new THREE.TubeGeometry(pipeSplineCRC, 200, cs.egnomon, 8, false);
 						mesh = new THREE.Mesh(tubeGeometry, materialArcsDiurnes);
 						mesh.receiveShadow = true;
@@ -1469,9 +1469,6 @@ earthGroup.add( meshClouds );
 				const yombre = (a * cp - ap * c) / det
 				const kxA = (xombre - xA1) / (xA2 - xA1)
 				const kxB = (xombre - xB1) / (xB2 - xB1)
-				// const kyA=(yombre+cs.ygnomon-yA1)/(yA2-yA1)
-				// const kyB=(yombre+cs.ygnomon-yB1)/(yB2-yB1)
-				//if ((kxA<0)||(kxA>1)||(kxB<0)||(kxB>1)||(kyA<0)||(kyA>1)||(kyB<0)||(kyB>1)){det=0}
 				if ((kxA < 0) || (kxA > 1) || (kxB < 0) || (kxB > 1)) { det = 0 }
 				if (!(pointDansCadran(xombre, yombre))) { det = 0 }
 				if (Math.abs(det) > 1) {
@@ -1757,7 +1754,12 @@ earthGroup.add( meshClouds );
 				cadran = mesh.clone()
 				cadranSolaireGroup.add(cadran)
 				cadran.receiveShadow = true
-				
+				cadran.scale.x = cs.largeur;
+				cadran.scale.y = cs.hauteur;
+				cadran.scale.z = cs.epaisseur;
+				//eulerCsGroup()
+				//EcrireXYZ()
+				cs.typeForme = "?"
 				TracerStyle()
 				PlacerLeSoleil()
 				effacelisteMesh(labelAxesListeMesh, groupAxes)
@@ -1776,7 +1778,7 @@ earthGroup.add( meshClouds );
 
 			document.getElementById("info").style.display = "none";
 
-			// dat.GUI ///////////////////////////////////////////////////////////////////////////////////////
+			// dat.GUI ///////////////////////////////////////////////////////////////////////////////////////parallelepiped
 			
 		//
 		
@@ -1786,7 +1788,7 @@ earthGroup.add( meshClouds );
 
 				function TracerSolide() {
 					if (NouveauCadran == true) {
-						if (cs.typeForme=="box"){cs.epaisseur = 30;cs.largeur=600}else{cs.epaisseur = 400;cs.largeur = 400}
+						if (cs.typeForme=="parallelepiped"){cs.epaisseur = 30;cs.largeur=600}else{cs.epaisseur = 400;cs.largeur = 400}
 						cs.hauteur =400;
 						cs.xgnomon = 0; cs.ygnomon = cs.hauteur / 4;
 						cs.zgnomon = cs.epaisseur / 2 + cs.hgnomon
@@ -1875,9 +1877,9 @@ earthGroup.add( meshClouds );
 									cs.epaisseur = 1; cs.hauteur = 1; cs.largeur = 1
 									cs.decli = 0; cs.incli = 90; cs.rot = 0
 								}
-								cadran.scale.x = cs.largeur;
-								cadran.scale.y = cs.hauteur;
-								cadran.scale.z = cs.epaisseur;
+								// cadran.scale.x = cs.largeur;
+								// cadran.scale.y = cs.hauteur;
+								// cadran.scale.z = cs.epaisseur;
 								eulerCsGroup()
 								EcrireXYZ()
 								cs.typeForme = "?"
@@ -1893,13 +1895,13 @@ earthGroup.add( meshClouds );
 				cadranSolaireGroup.add(axeY)
 				cadranSolaireGroup.add(axeZ)
 				materialCS.side = THREE.FrontSide
-				if (v == "box") { cadran = cadranBox.clone(); TracerSolide() }//; cs.epaisseur = cs.largeur }
+				if (v == "parallelepiped") { cadran = cadranBox.clone(); TracerSolide() }//; cs.epaisseur = cs.largeur }
 				if (v == "cylinder") { cadran = cadranCyl.clone(); TracerSolide() }//; cs.epaisseur = cs.largeur }
 				if (v == "cone") { cadran = cadranCone.clone(); TracerSolide() }//; cs.epaisseur = cs.largeur }
 				if (v == "sphere") { cadran = cadranSph.clone(); TracerSolide() }//; cs.epaisseur = cs.largeur; cs.hauteur = cs.largeur }
 				if (v == "equatorial") { cadran = cadranEquatorial.clone(); TracerCadranEquatorial() }
 				if (v == "scaphe") { cadran = cadranScaphe.clone(); TracerCadranScaphe() }
-				if (v == "File...") { TracerFichier() }
+				if (v == "file PLY, OBJ...") { TracerFichier() }
 				cadran.receiveShadow = true
 				gnomon.visible = false
 				eulerCsGroup()
@@ -1908,6 +1910,7 @@ earthGroup.add( meshClouds );
 				PlacerLeSoleil()
 				render()
 				EcrireXYZ()
+				
 			}
 				
 
@@ -1922,12 +1925,15 @@ earthGroup.add( meshClouds );
 					cs.epaisseur = 30
 					cs.decli = 0
 					cs.incli = 90
-					cs.hgnomon = 50,
-					cs.egnomon = 1,
-					cs.xgnomon = 0,
-					cs.ygnomon = 100,
+					cs.hgnomon = 50
+					cs.egnomon = 1
+					cs.xgnomon = 0
+					cs.ygnomon = 100
 					cs.zgnomon = 70
-					cs.rot=0;
+					cs.rot=0
+					cs.hoursTextSize=1
+					cs.dataURL=""
+					//cs=csInitial
 				}
 				
 				
@@ -2035,7 +2041,7 @@ earthGroup.add( meshClouds );
 			}
 
 
-
+			//let csInitial=cs
 
 			const gui = new GUI(
 				{ width: Math.min(Math.round(window.innerWidth / 2), 280), title: "Edit sundial..." }
@@ -2075,12 +2081,13 @@ earthGroup.add( meshClouds );
 
 			gui.add(cs, "typeCadran", [SP, BF, BFG, ANL, RTS]).name("type of sundial") ///+++
 				.onChange(function (e) {
+					NouveauCadran=true
 					initMenu(e)
 				});
 
-			const gtypeForme = gui.add(cs, "typeForme", ["?","box", "cylinder", "cone", "sphere","equatorial","scaphe",/* "Dolphins",*/"File..."])
+			const gtypeForme = gui.add(cs, "typeForme", ["?","parallelepiped", "cylinder", "cone", "sphere","equatorial","scaphe","file PLY, OBJ..."])
 			                    .name("form of sundial") ///+++
-								.onFinishChange(function(v){TracerCadranRTS(v)} )
+								.onFinishChange(function(v){TracerCadranRTS(v);cs.typeForme='?';gtypeForme.updateDisplay()} )
 								.listen()
       
 

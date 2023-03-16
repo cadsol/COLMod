@@ -126,7 +126,7 @@
 			function displayFace(Pol, nf) {
 				if (meshFace != undefined) { group.remove(meshFace) }
 				nbFaces = Pol.face.length
-				
+				if (nf>=nbFaces){nf=nbFaces-1}
 				const verticesFace = []
 				let sx = 0, sy = 0, sz = 0
 				for (let i = 0; i < Pol.face[nf].length; i++) {
@@ -162,9 +162,11 @@
 
 				const choixFace = guiSectionFace.add(sundial, "face", 0, nbFaces - 1, 1)
 					.name(" number")
-					.onChange(f => {displayFace(polyhedre, f)
-					choixFace.max(nbFaces)
-				    choixFace.updateDisplay()})
+					.onChange(f => {
+						displayFace(polyhedre, f)
+						choixFace.max(nbFaces-1)
+						choixFace.updateDisplay()
+					})
 
 				const traceSundial = guiSectionFace.add(sundial, "trace");
 

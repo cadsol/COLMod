@@ -21,7 +21,7 @@ export let cs = {
 
 	//geometry 
 	typeCadran: SP,// {value:SP,comment:"Sundial type"},
-	typeForme:"box",
+	typeForme:"parallelepiped",
 	largeur: 600,
 	hauteur: 400,
 	epaisseur: 30,
