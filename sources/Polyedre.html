@@ -9,10 +9,14 @@
 </head>
 
 <body>
-
-	<div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - Poly AJL 17/03 geometry
+	<script src="./parser.js"></script>
+	<div id="info"> 
+		<h1>Polyhedrics Sundials</h1>	
+		Library 3D: <a href="https://threejs.org" target="_blank" >Three.js</a> <br>
+		<div id="ver">"Version: 18/03/2023 " </div>
+		<h2><div id="poly">"Octahedre" </div></h2>
 	</div>
-
+	
 	<script type="module">
 
 
@@ -24,16 +28,18 @@
 		import { ConvexGeometry } from './jsm/geometries/ConvexGeometry.js';
 		//import * as BufferGeometryUtils from './jsm/utils/BufferGeometryUtils.js';
 		import { POLYHEDRA } from './polyhedra.js';
+		//import { Parser } from './parser.js';
 
 
 		let group, camera, scene, renderer, categoryFolders, meshPolyedre, meshFace,
-			nbFaces, nFace, guiSectionPoly, polyhedre;
+			nbFaces,nFace,normalFace, guiSectionPoly, polyhedre,points,
+			quaternion = new THREE.Quaternion();
 
 		init();
 		animate();
 
 		function init() {
-
+			const labelPoly = document.getElementById('poly');
 			scene = new THREE.Scene();
 
 			renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -78,7 +84,7 @@
 			group = new THREE.Group();
 			scene.add(group);
 
-			let sundial = { face: 0, trace: false };
+			
 			let sundials = []
 
 
@@ -92,22 +98,31 @@
 				transparent: true,
 				//map: texture
 				//syze:0.1
-				wireframe:true
+				//wireframe:true
 			});
 
 			const meshMaterialFace = new THREE.MeshStandardMaterial({
-				color: 0x0000ff,
-				opacity: 1,
+				color: 0x00ffff,
+				opacity: 0.9,
 				side: THREE.DoubleSide,
 				transparent: true,
 				//map: texture
 				//syze:0.1
 			});
 
+			const pointsMaterial = new THREE.PointsMaterial( {
+					color: 0x0080ff,
+					map: texture,
+					size: 0.5,
+					alphaTest: 0.5
+				} );
+
+				
+
 
 
 			function displayPolyhedron(Pol) {
-				if (meshPolyedre != undefined) { group.remove(meshPolyedre) }
+				if (meshPolyedre != undefined) { meshPolyedre.geometry.dispose();group.remove(meshPolyedre) }
 
 				let verticesPolyedre = []
 				nbFaces = Pol.face.length
@@ -120,12 +135,22 @@
 				const meshGeometry = new ConvexGeometry(verticesPolyedre);
 				meshPolyedre = new THREE.Mesh(meshGeometry, meshMaterial);
 				group.add(meshPolyedre);
+				
+				if (points != undefined) { points.geometry.dispose(); group.remove(points) }
+				const pointsGeometry = new THREE.BufferGeometry().setFromPoints( verticesPolyedre );//.getAttribute ( name : String ) : BufferAttribute
+																									//.fromBufferAttribute ( attribute : BufferAttribute, index : Integer ) : this
+				
+				points = new THREE.Points( pointsGeometry, pointsMaterial );
+				group.add( points );
+				console.log(points)
 				//meshPolyedre.lookAt(new THREE.Vector3(0,0,1000))
-				console.log(meshPolyedre)
+				//console.log(meshPolyedre)
 			}
 
 			function displayFace(Pol, nf) {
-				if (meshFace != undefined) { group.remove(meshFace)}
+				let nSommetsParFace=0,a,b,c,c1,c2,axey
+
+				if (meshFace != undefined) { meshFace.geometry.dispose();group.remove(meshFace)}
 				nbFaces = Pol.face.length
 				if (nf>=nbFaces){nf=nbFaces-1}
 				const verticesFace = []
@@ -133,32 +158,55 @@
 				let sx = 0, sy = 0, sz = 0
 				for (let i = 0; i < Pol.face[nf].length; i++) {
 					const j = Pol.face[nf][i]
+					nSommetsParFace=Pol.face[nf].length
 					const v = Pol.vertex[j]
-					sx += v[0]; sy += v[1]; sz += v[2]
+					sx += v[0]*k; sy += v[1]*k; sz += v[2]*k
 					
 					const verticeFace = new THREE.Vector3(v[0] * k, v[1] * k, v[2] * k);
 					verticesFace.push(verticeFace);
-				}
-				verticesFace.push(new THREE.Vector3(sx / nbFaces, sy / nbFaces, sz / nbFaces))
+					if(i==0){a=verticeFace.clone()}
+					if(i==1){b=verticeFace.clone()}
+					if(i==2){c=verticeFace.clone()}
+				 }
+				c1= new THREE.Vector3();c2= new THREE.Vector3()
+				c1.subVectors(b,a)
+				c2.subVectors(c,b)		
+				c1.cross(c2).normalize()	
+				normalFace=c1.clone()		
+				
+				
+
+// 				const dirFace2=new THREE.Vector3(normalFace.x,0,normalFace.z)
+// 				dirFace2.normalize()
+// 				quaternion.setFromUnitVectors ( normalFace, dirFace2 ) 
+// console.log(dirFace2)
+				verticesFace.push(new THREE.Vector3(sx / nSommetsParFace, sy / nSommetsParFace, sz / nSommetsParFace))
 				const meshGeometry = new ConvexGeometry(verticesFace);
 				meshFace = new THREE.Mesh(meshGeometry, meshMaterialFace);
 				group.add(meshFace);
-				nFace = nf
-				
-				//console.log(meshFace)
+				//console.log(meshFace.rotation)
 			}
 
 
 			function InitGui() {
 				const gui = new GUI(
 					{ width: Math.min(Math.round(window.innerWidth / 2), 280), title: "Edit polyhedric sundial..." }
-				);
-
-				categoryFolders = {};
-				let parameters = {}// {function(){}};
-				// check category[0]. if folder does not exist, create it, add it to that folder.
-				//   if category field DNE, just add it to the end.
-				//var guiSectionPol = gui.addFolder("Polyedra");
+				);	
+				
+				let sundial = {
+					face: 0, 
+					rotationBase() {
+						quaternion.setFromUnitVectors(normalFace, new THREE.Vector3(0, -1, 0))
+						group.setRotationFromQuaternion(quaternion)
+					},
+					rotationSud() {
+						const v1 = new THREE.Vector3(normalFace.x, 0, normalFace.z)
+						v1.normalize()
+						const v2 = new THREE.Vector3(0, 0, 1)
+						group.rotateY(v1.angleTo(v2))
+						//group.setRotationFromQuaternion ( quaternion ) 
+					}
+				};
 
 				const guiSectionFace = gui.addFolder("Facet");
 
@@ -166,14 +214,26 @@
 					.name(" number")
 					.onChange(f => {
 						displayFace(polyhedre, f)
-						choixFace.max(nbFaces-1)
+						choixFace.max(nbFaces - 1)
 						choixFace.updateDisplay()
+						nFace=f
 					})
 
-				const traceSundial = guiSectionFace.add(sundial, "trace");
+				const BaseSundial = guiSectionFace.add(sundial, "rotationBase").name("Base")
+				const SudSundial = guiSectionFace.add(sundial, "rotationSud").name("Sud")
+										// .onChange(function(t){
+										// quaternion.setFromUnitVectors ( normalFace, new THREE.Vector3(0,-1,0))
+										// group.setRotationFromQuaternion ( quaternion ) 	
+										// //console.log(polyhedre)
+										// })
 
-
+				categoryFolders = {};
+				let parameters = {}// {function(){}};
+				// check category[0]. if folder does not exist, create it, add it to that folder.
+				// if category field DNE, just add it to the end.
+	
 				const guiSectionPoly = gui.addFolder("Polyedra");
+				
 				for (var arg in POLYHEDRA) {
 					var guiSection = guiSectionPoly;
 					if (POLYHEDRA[arg].hasOwnProperty("category")) {
@@ -189,13 +249,15 @@
 						displayPolyhedron(POLYHEDRA[a])
 						displayFace(POLYHEDRA[a], 0)
 						polyhedre = POLYHEDRA[a]
-						sundials = []
-						for (let nf = 0; nf < nbFaces; nf++) { sundial = { face: nf, trace: false }, sundials.push(sundial) }
+						labelPoly.innerHTML = polyhedre.name
+						// sundials = []
+						// for (let nf = 0; nf < nbFaces; nf++) { sundial = { face: nf, trace: false }, sundials.push(sundial) }
 					})
 				}
 
 				gui.open();
 			    guiSectionPoly.close()
+				//console.log("paraml",parameters)
 			}
 
 			
@@ -210,7 +272,11 @@
 			
 			
 			//group.lookAt(new THREE.Vector3(0,0,-1))
-			console.log(meshPolyedre)
+			//console.log(meshPolyedre)
+
+			let zFunc = Parser.parse("x^2+y^2+sin(x)+log(y)").toJSFunction( ['x','y'] );
+
+            console.log(zFunc(2,3))
 
 
 		}

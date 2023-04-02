@@ -4,7 +4,7 @@
  * Converted to JSON by Lee Stemkoski
  */
  
-export let POLYHEDRA = {
+export const POLYHEDRA = {
 
 /* Platonic Solids */
 

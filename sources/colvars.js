@@ -28,6 +28,7 @@ export let cs = {
 	decli: 0,
 	incli: 90,
 	rot: 0,
+	zfxy:"sin(50*sqrt(x*x+y*y))",
 
 	hgnomon: 50,
 	egnomon: 1,

@@ -14,7 +14,7 @@
 </head>
 
 <body>
-
+    <script src="./parser.js"></script>
 	<div id="container">
 		<div id="info">
 			<h1>CadSolOnLine</h1>
@@ -76,6 +76,7 @@
 		import { STLExporter } from './jsm/exporters/STLExporter.js';
 		import { PLYLoader } from './jsm/loaders/PLYLoader.js';
 		import { OBJLoader } from './jsm/loaders/OBJLoader.js';
+		import { ParametricGeometry } from './jsm/geometries/ParametricGeometry.js';
 
 
 
@@ -94,14 +95,14 @@
 		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM } from './colvars.js';
 // --------------------------------------------------------------------------------------------------------------------------------------	
 
-		cs.version = "2023-03-15"
+		cs.version = "2023-03-31"
         let dateJour = new Date()
 		//cs.hsol=dateJour.getHours()
 		cs.year=dateJour.getFullYear()
 		//console.log(dateJour)
 
 		let CSVtext = "", SVGtext = "", CSVephemerid = ""
-
+		let zFuncxy
 
 		let container, stats, buttonNewSundial;
 		let camera, scene, renderer;
@@ -120,11 +121,11 @@
 		//scene.background = new THREE.Color(localStorage.getItem("BackGround"))
 	
 
-		const light = new THREE.DirectionalLight(0xffffff);
+		const light = new THREE.DirectionalLight(0xffffff,1);
 		light.position.set(0, 1, 1).normalize();
         let lineRay
 
-		const ambientLight = new THREE.AmbientLight(0x252525); // soft white light
+		const ambientLight = new THREE.AmbientLight(0x252525,0.75); // soft white light
 		//const ambientLight = new THREE.LightProbe(); 
 		scene.add(ambientLight);
 
@@ -248,11 +249,13 @@
 		const textureBois = new THREE.TextureLoader().load('./textures/hardwood2_diffuse.jpg');
 		textureBois.name='wood'
 		const textureEau = new THREE.TextureLoader().load('./textures/waternormals.jpg');
-		textureEau.name='water'
-
+		textureEau.name='water'  
+		const texturePierreVerte = new THREE.TextureLoader().load('./greenStone.jpg');
+		texturePierreVerte.name='green stone'  
+		
 
 		const choixTextures = { 'none':null,'steel': textureAcier, 'copper': textureCuivre,'water':textureEau, 
-			                        'asphalt': textureAsphalt,'wood':textureBois,'fruits': textureFruits}
+			                        'asphalt': textureAsphalt,'wood':textureBois,'fruits': textureFruits,'green stone':texturePierreVerte}
 		//let texture = textureAcier
 		
 		const optionsMaterial = { roughness: 0.5, metalness: 0.5, transparent: true, opacity: 1, side: THREE.DoubleSide, map: null }
@@ -284,7 +287,7 @@
 	    const geometryCScyl = new THREE.CylinderGeometry(0.5,0.5, 1,64,64);
 		const geometryCSsph = new THREE.SphereGeometry(0.5,64,64);
 		const geometryCScone = new THREE.ConeGeometry(0.5,1,64,64);
-
+		
 
         
 		function CercleSetting(h,e, spline, nsteps) {		
@@ -658,7 +661,6 @@ earthGroup.add( meshClouds );
 			mesh = new THREE.Mesh(fontGeometry, material);
 
 			group.add(mesh);
-			//if (listeMesh){listeMesh.push(mesh)};
 			listeMesh.push(mesh);
 			if (gauche) { x = x - (texte.length - 1) * 7 * cs.hoursTextSize }//else{x=x+7*cs.hoursTextSize}
 			if ((x + 7 * cs.hoursTextSize) > (cs.largeur / 2 - 5)) { x -= 14 * cs.hoursTextSize }
@@ -704,8 +706,7 @@ earthGroup.add( meshClouds );
 		}
 
 		//------------------------------------------------------------------------------------------------------------
-		function TracerHeuresEtArcs() {
-		//	document.body.style.cursor="wait"
+		function TracerHeuresEtArcs() {		
 			initCSVtext()
 			if (cs.typeCadran == ANL) {
 				TracerAnalem();
@@ -724,8 +725,6 @@ earthGroup.add( meshClouds );
 			}
 			TracerStyle()
 			PlacerLeSoleil()
-			//document.body.style.cursor="auto"
-			//console.log("TracerHeuresEtArcs() ")
 		}
 
 
@@ -1847,7 +1846,6 @@ earthGroup.add( meshClouds );
 						}
 				
 				function TracerFichier() {
-					//let dataURL = ""
 					var fileInput = document.createElement('input');
 					
 					fileInput.type = 'file';
@@ -1859,7 +1857,6 @@ earthGroup.add( meshClouds );
 						const NF = file.name.toLowerCase()
 						reader.readAsDataURL(file)
 						reader.addEventListener("load", () => {
-								//dataURL = reader.result
 								cs.dataURL=reader.result							
 								if (NF.lastIndexOf('.obj') > 0) {
 									cs.typedataURL='.obj'
@@ -1877,9 +1874,6 @@ earthGroup.add( meshClouds );
 									cs.epaisseur = 1; cs.hauteur = 1; cs.largeur = 1
 									cs.decli = 0; cs.incli = 90; cs.rot = 0
 								}
-								// cadran.scale.x = cs.largeur;
-								// cadran.scale.y = cs.hauteur;
-								// cadran.scale.z = cs.epaisseur;
 								eulerCsGroup()
 								EcrireXYZ()
 								cs.typeForme = "?"
@@ -1888,8 +1882,43 @@ earthGroup.add( meshClouds );
 					});
 					document.body.appendChild(fileInput);
 					fileInput.click();
+					cs.typeForme='?'
 				}
-
+				
+				function TracerCadranParam() {
+					materialCS.side = THREE.DoubleSide
+					gzfxy.enable()
+					zFuncxy = Parser.parse(cs.zfxy).toJSFunction(['x', 'y']) 
+					//catch (err) { console.log("Formule incorrecte"); return }
+					let funcxyz = (u, v, target) => {
+						const xf = (u - 0.5)
+						const yf = (v - 0.5)
+						//const zf= Math.sin(xf*cs.largeur/30 )
+						//const zf=Math.sin(50*Math.sqrt(xf*xf+yf*yf))
+						//target.set( (u-0.5), (v-0.5), Math.cos(  xf*cs.largeur/30 ))						
+						const zf = zFuncxy(xf, yf)
+						target.set(xf, yf, zf)
+					}
+					const geometryCSParam = new ParametricGeometry(funcxyz, 128, 128)
+					const cadranParam = new THREE.Mesh(geometryCSParam, materialCS);
+					cadran = cadranParam.clone()
+					if (NouveauCadran == true) {
+						cs.epaisseur = 10; cs.hauteur = 300; cs.largeur = 300
+						cs.xgnomon = 0; cs.ygnomon = 0; cs.zgnomon = 50
+						cs.decli = 0; cs.incli = 90
+					}
+					cadran.scale.x = cs.largeur;
+					cadran.scale.y = cs.hauteur;
+					cadran.scale.z = cs.epaisseur
+					// folderDimensionsSundial.show()
+					// folderOrientationSundial.show()
+					cadranSolaireGroup.add(cadran);
+					eulerCsGroup()
+					TracerStyle()
+					TracerHeuresEtArcs()
+					//render()
+				}
+				gzfxy.disable()
 				cadranSolaireGroup.clear()
 				cadranSolaireGroup.add(axeX)
 				cadranSolaireGroup.add(axeY)
@@ -1902,6 +1931,7 @@ earthGroup.add( meshClouds );
 				if (v == "equatorial") { cadran = cadranEquatorial.clone(); TracerCadranEquatorial() }
 				if (v == "scaphe") { cadran = cadranScaphe.clone(); TracerCadranScaphe() }
 				if (v == "file PLY, OBJ...") { TracerFichier() }
+				if (v == "parametric") { TracerCadranParam() }
 				cadran.receiveShadow = true
 				gnomon.visible = false
 				eulerCsGroup()
@@ -1910,7 +1940,7 @@ earthGroup.add( meshClouds );
 				PlacerLeSoleil()
 				render()
 				EcrireXYZ()
-				
+			
 			}
 				
 
@@ -1943,6 +1973,7 @@ earthGroup.add( meshClouds );
 				folderDimensionsSundial.show()
 				folderOrientationSundial.show()
 				gtypeForme.disable()
+				if (cs.typeForme=="parametric"){gzfxy.enabled()}else{gzfxy.disable()}
 				zPosController.disable()
 				ctlRot.disable()
 				eulerCsGroup()
@@ -1951,9 +1982,9 @@ earthGroup.add( meshClouds );
 				groupAxes.add(axeX)
 			    groupAxes.add(axeY)			
 			    groupAxes.add(axeZ)
-				cadranSolaireGroup.add(axeX)
-				cadranSolaireGroup.add(axeY)
-				cadranSolaireGroup.add(axeZ)
+				// cadranSolaireGroup.add(axeX)
+				// cadranSolaireGroup.add(axeY)
+				// cadranSolaireGroup.add(axeZ)
 				cadranSolaireGroup.add(groupAxes)
 				EcrireXYZ()
 				render
@@ -2037,6 +2068,7 @@ earthGroup.add( meshClouds );
 					gtypeForme.enable()
 					zPosController.enable()
 					ctlRot.enable()
+					if (cs.typeForme=="parametric"){gzfxy.enabled()}else{gzfxy.disable()}
 				}
 			}
 
@@ -2085,11 +2117,17 @@ earthGroup.add( meshClouds );
 					initMenu(e)
 				});
 
-			const gtypeForme = gui.add(cs, "typeForme", ["?","parallelepiped", "cylinder", "cone", "sphere","equatorial","scaphe","file PLY, OBJ..."])
+			const gtypeForme = gui.add(cs, "typeForme", ["parallelepiped", "cylinder", "cone", "sphere","equatorial","scaphe","file PLY, OBJ...","parametric"])
 			                    .name("form of sundial") ///+++
-								.onFinishChange(function(v){TracerCadranRTS(v);cs.typeForme='?';gtypeForme.updateDisplay()} )
+								.onFinishChange(function(v){TracerCadranRTS(v);gtypeForme.updateDisplay()} )
 								.listen()
       
+			const gzfxy= gui.add(cs,"zfxy").name("z=f(x,y)")
+							.onFinishChange(function(v){
+								try{zFuncxy = Parser.parse(cs.zfxy).toJSFunction(['x', 'y']) 
+								    TracerCadranRTS("parametric")}
+					           catch (err) { alert("Formule incorrecte") }
+								})
 
 			const Button2D = {
 				function2D() {
@@ -2481,7 +2519,7 @@ earthGroup.add( meshClouds );
 				});
 			folderColorsSundial.add(materialCS, 'wireframe')
 				.onChange(function (v) {
-					cs.wireframe=e
+					cs.wireframe=v
 					materialGnomon.wireframe = v;
 					materialHeuresSolaires.wireframe = v;
 					materialHeuresLegalesSA.wireframe = v;
@@ -2798,17 +2836,18 @@ earthGroup.add( meshClouds );
 			const folderFiles = gui.addFolder(sp + 'Export');
 			const ButtonDownload = {
 				functionDownload() {
+					effacelisteMesh(labelAxesListeMesh,groupAxes)
 					let e = cs.export
-					if (e == "Sundial(JSON)") { saveString(JSON.stringify(cs, null, 2), cs.nameFile + '.json') };
-					if (e == "Spreadsheet(CSV)") {
+					if (e == "Sundial(.JSON)") { saveString(JSON.stringify(cs, null, 2), cs.nameFile + '.json') };
+					if (e == "Spreadsheet(.CSV)") {
 						initCSVtext(); TracerHeuresEtArcs();
 						saveString(CSVtext, cs.nameFile + '.csv')
 					};
-					if (e == "Ephemeris(CSV)") { Ephemerid(cs.year); saveString(CSVephemerid, 'Ephemerid' + cs.year + '.csv') };
-					if (e == "3D(PLY)") { saveString(GenererPLY(), cs.nameFile + ".PLY") };
-					if (e == "3D(OBJ)") { saveString(GenererOBJ(), cs.nameFile + ".OBJ") };
-					if (e == "3D(STL)") { saveString(GenererSTL(), cs.nameFile + ".STL") };
-					if (e == "Scal.Vect.Graph.(SVG)") {
+					if (e == "Ephemeris(.CSV)") { Ephemerid(cs.year); saveString(CSVephemerid, 'Ephemerid' + cs.year + '.csv') };
+					if (e == "3D(.PLY)") { saveString(GenererPLY(), cs.nameFile + ".PLY") };
+					if (e == "3D(.OBJ)") { saveString(GenererOBJ(), cs.nameFile + ".OBJ") };
+					if (e == "3D(.STL)") { saveString(GenererSTL(), cs.nameFile + ".STL") };
+					if (e == "Scal.Vect.Graph.(.SVG)") {
 						initSVGtext(cs.unitSVG);
 						EcrireDevise(cs.devise, cs.positionDevisex, cs.positionDevisey);
 						TracerHeuresEtArcs()
@@ -2816,6 +2855,7 @@ earthGroup.add( meshClouds );
 						saveString(SVGtext, cs.nameFile + '.svg')
 					    };
 					if (e =="Params (.HTML)"){saveString(HTLM(cs), cs.nameFile + '.html')}
+					EcrireXYZ()
 				}
 			}
 
@@ -2826,8 +2866,8 @@ earthGroup.add( meshClouds );
 			folderFiles.add(cs, "nameFile").name("File name")
 
 			folderFiles.add(cs, "export",
-				["Sundial(JSON)", "Spreadsheet(CSV)", "3D(.PLY)", "3D(OBJ)", "3D(STL)", 
-				"Ephemeris(CSV)", "Scal.Vect.Graph.(SVG)", "Params (.HTML)"])
+				["Sundial(.JSON)", "Spreadsheet(.CSV)", "3D(.PLY)", "3D(.OBJ)", "3D(.STL)", 
+				"Ephemeris(.CSV)", "Scal.Vect.Graph.(.SVG)", "Params (.HTML)"])
 				.name('Type of file')
 				.onChange(function (e) {
 					if (e == "Scal.Vect.Graph.(SVG)") { unitsSVG.enable() } else { unitsSVG.disable() };
@@ -2998,7 +3038,9 @@ earthGroup.add( meshClouds );
 			const plyExporter = new PLYExporter();
 			let s = "";
 			if (cs.typeCadran == BF) { cadranSolaireGroup.remove(gnomon) }
-			s = plyExporter.parse(cadranSolaireGroup)
+			s = plyExporter.parse(cadranSolaireGroup,data => {}, { binary: false})
+			console.log(s)
+			//exporter.parse(mesh, data => console.log(data), { binary: true, excludeAttributes: [ 'color' ], littleEndian: true });
 			if (cs.typeCadran == BF) { cadranSolaireGroup.add(gnomon) }
 			return s
 		}
@@ -3104,14 +3146,14 @@ earthGroup.add( meshClouds );
 		// -------------------------------------------------------------------------------------------------------
 		function CoordRayTracing(hrad,dec,trace=false) {   // hrad: angle horaire en radians de -Pi a Pi   dec: declinaison du soleil en radians
 
-			let rayOrigin = new THREE.Vector3();    // origine du rayon lumineux virtuel : centre du tore de corrd. cs.xgnomon,  cs.ygnomon cs.zgnomon
+			let rayOrigin = new THREE.Vector3();    // origine du rayon lumineux virtuel : centre du tore de coord. cs.xgnomon,  cs.ygnomon cs.zgnomon
 			                                        // en cord. locales, liées au cadran, les axes x, y et z sont visibles sur l'écran
 			let rayDirection = new THREE.Vector3();   // direction rayon (vecteur de norme 1)
 			let coordRayCaster = new THREE.Vector3();   // coord. de l'ombre tore sur le cadran en coord. locales (c'est le pont 3D à trouver)
 			
 			const k = 1200;  //constante arbitraire
 
-			rayOrigin.set(cs.xgnomon / cadran.scale.x, cs.ygnomon / cadran.scale.y, cs.zgnomon / cadran.scale.z)  // ces facteur d'echelle sont liés au dimensions d cadran
+			rayOrigin.set(cs.xgnomon / cadran.scale.x, cs.ygnomon / cadran.scale.y, cs.zgnomon / cadran.scale.z)  // ces facteur d'echelle sont liés au dimensions du cadran
 			cadran.localToWorld(rayOrigin)   // changement de repere, il faut passer des coord. locales aux coord. globales
 			
 			sphereSun.position.z =  k*Math.cos(dec) * Math.cos(-hrad);   // calcul des coord. du soleil virtuel
@@ -3129,17 +3171,17 @@ earthGroup.add( meshClouds );
 																  // le cadran est modélisé par un maillage de trangles
 			if (intersects.length > 0) {                          // s'il ya au moins une intersection, les coord. du point sont dans intersects[0].point
 				coordRayCaster = cadran.worldToLocal(intersects[0].point)   // on revient aux coord.locales
-				coordRayCaster.set(coordRayCaster.x * cadran.scale.x , coordRayCaster.y * cadran.scale.y , coordRayCaster.z * cadran.scale.z)
+				coordRayCaster.set(coordRayCaster.x * cadran.scale.x , coordRayCaster.y * cadran.scale.y , coordRayCaster.z * cadran.scale.z)// il reste à remettre à l'échelle
 
 			if (trace==true)	{
 				cadran.worldToLocal(rayOrigin) 
 				rayOrigin.set(rayOrigin.x * cadran.scale.x , rayOrigin.y * cadran.scale.y , rayOrigin.z * cadran.scale.z)
 				const geometryRay = new THREE.BufferGeometry().setFromPoints( [rayOrigin,coordRayCaster] );
-				const materialRay = new THREE.LineBasicMaterial({color: 0xffffff});
+				const materialRay = new THREE.LineBasicMaterial({color: 0xffffff});//ligne blanche
 				 lineRay = new THREE.Line( geometryRay, materialRay );				 
 				 cadranSolaireGroup.add( lineRay );
 				}
-					// il reste à remettre à l'échelle
+					
 				return {
 					x: coordRayCaster.x,   //retour des coord de l'ombre, en coord locales, ok=true
 					y: coordRayCaster.y,
@@ -3207,26 +3249,7 @@ earthGroup.add( meshClouds );
 
 		}
 
-
-// var form = document.createElement( 'form' );
-// form.style.display = 'none';
-// document.body.appendChild( form );
-
-// var fileInput = document.createElement( 'input' );
-// fileInput.multiple = true;
-// fileInput.type = 'file';
-// fileInput.addEventListener( 'change', function () {
-
-// 	editor.loader.loadFiles( fileInput.files );
-// 	form.reset();
-
-// } );
-// form.appendChild( fileInput );
-
-
 	</script>
-
-
 
 </body>
 
