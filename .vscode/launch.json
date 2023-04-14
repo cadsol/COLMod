@@ -8,7 +8,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Open colmod.html",
-            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod.html"
+            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod2023-04-10.html"
         },
         {
             "type": "chrome",

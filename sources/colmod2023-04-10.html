@@ -9,7 +9,7 @@
 	<meta name="viewport"
 		content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0">
 <!--  FICHIER CSS---------------------------------------------------------------------------------------------------------- -->
-	<link type="text/css" rel="stylesheet" href="./main2022-07-19.css">
+	<link type="text/css" rel="stylesheet" href="./main2023-04-10.css">
 <!--  FICHIER CSS------------------------------------------------------------------------------------------------------------->
 </head>
 
@@ -92,10 +92,10 @@
 			HSDSA = "Sidereals (summer, autumn)", HSDWS = "Sidereals (winter, spring)";
 
 // -----------------------------------COLVARS--------------------------------------------------------------------------------------------
-		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM } from './colvars.js';
+		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM } from './colvars2023-04-10.js';
 // --------------------------------------------------------------------------------------------------------------------------------------	
 
-		cs.version = "2023-04-09"
+		cs.version = "2023-04-10"
         let dateJour = new Date()
 		//cs.hsol=dateJour.getHours()
 		cs.year=dateJour.getFullYear()
@@ -846,7 +846,7 @@ earthGroup.add( meshClouds );
 
 		// --------------------------------------------------------------------------------------------------------
 		function pointDansCadran(x, y) {
-			return /*(cs.typeCadran==RTS) ||*/ ((Math.abs(x) <= (cs.largeur / 2)) && (Math.abs(y) <= (cs.hauteur / 2)))
+			return (cs.typeCadran==RTS) || ((Math.abs(x) <= (cs.largeur / 2)) && (Math.abs(y) <= (cs.hauteur / 2)))
 		}
 		//---------------------------------------------------------------------------------------------------------
 		let g1, g2, k1, k2;
@@ -1669,16 +1669,17 @@ earthGroup.add( meshClouds );
 		function loadJsonFile() {
 				let csl;
 				const [file] = document.querySelector('input[type=file]').files;
-
+				
 				const reader = new FileReader();
 				reader.addEventListener("load", () => {
 					try { csl = JSON.parse(reader.result) }
 					catch (e) { console.error("Parsing error:", e) }
 					//console.log(JSON.stringify(csl,null,2));
 					for (var k in csl) { cs[k] = csl[k] }
+					Info(cs.nameFile)
 					TS = TableSol(cs.year);
 					NouveauCadran=false
-					Info(cs.nameFile)
+					
 					run();
 				}, false);
 				
@@ -3172,6 +3173,9 @@ earthGroup.add( meshClouds );
 			window.clearInterval(temporisation);
 			if (e > 0) { temporisation = window.setInterval(myTimerSun, 10) }; //    1/100 sec
 		}
+
+		
+		
 		// -------------------------------------------------------------------------------------------------------
 		function CoordRayTracing(hrad, dec, trace = false) {   // hrad: angle horaire en radians de -Pi a Pi   dec: declinaison du soleil en radians
 			    const [sh, ch] = base.sincos(-hrad)
@@ -3213,7 +3217,6 @@ earthGroup.add( meshClouds );
 					if (intersects.length > 0) {                          // s'il ya au moins une intersection, les coord. du point sont dans intersects[0].point
 						coordRayCaster = cadran.worldToLocal(intersects[0].point)   // on revient aux coord.locales
 						coordRayCaster.set(coordRayCaster.x * cadran.scale.x, coordRayCaster.y * cadran.scale.y, coordRayCaster.z * cadran.scale.z)// il reste à remettre à l'échelle
-
 						if (trace == true) {
 							cadran.worldToLocal(rayOrigin)
 							rayOrigin.set(rayOrigin.x * cadran.scale.x, rayOrigin.y * cadran.scale.y, rayOrigin.z * cadran.scale.z)
@@ -3237,6 +3240,7 @@ earthGroup.add( meshClouds );
 						ok: false
 					}
 				}
+				
 			}
 		
 		// Terre ---------------------------------------------------------------------------------------------------
