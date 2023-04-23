@@ -1893,14 +1893,15 @@ earthGroup.add( meshClouds );
 				
 				function TracerCadranParam() {
 					//gui.domElement.style.color = 'green';
+					Info("z="+cs.zfxy)
 					materialCS.side = THREE.DoubleSide
 					gzfxy.enable()
 					zFuncxy = Parser.parse(cs.zfxy).toJSFunction(['x', 'y']) 
 					//catch (err) { console.log("Formule incorrecte"); return }
 					let funcxyz = (u, v, target) => {
-						const xf = (u - 0.5)
-						const yf = (v - 0.5)					
-						const zf = zFuncxy(xf, yf)/2
+						const xf = (u - 0.5)*2  
+						const yf = (v - 0.5)*2			
+						const zf = zFuncxy(xf, yf)
 						target.set(xf, yf, zf)
 					}
 					const  geometryCSParam= new ParametricGeometry(funcxyz, 128, 128)
@@ -2097,7 +2098,8 @@ earthGroup.add( meshClouds );
 			const gui = new GUI(
 				{ width: Math.min(Math.round(window.innerWidth / 2), 280), title: "Edit sundial...",closeFolders:true  }
 			);
-			const sp = "☼ "
+			//const sp = "☼ "
+			const sp = ""
 			gui.$title.style.color = 'yellow'
 
 			function helpGui(g, textHelp) {
@@ -2188,7 +2190,6 @@ earthGroup.add( meshClouds );
 					w.document.close()
 				}
 			}
-			//const fiche = gui.add(ButtonFiche, 'functionFiche').name(nameW);
 
 
 			//// GEOLOCALISATION
@@ -3006,23 +3007,20 @@ earthGroup.add( meshClouds );
 			sphereEarth.rotation.y = -Math.PI * 0.5;
 
 
-			//cs.autoCloseMenu=true
+			cs.autoCloseMenu=true
 			
-
 			const couleurMenu = "#C8FAFF"
 			for (let g = 0; g < gui.folders.length; g++) {
 				gui.folders[g].$title.style.color = couleurMenu
 				gui.folders[g].close()
 				if (cs.autoCloseMenu) {
-					gui.folders[g].domElement.addEventListener("mouseleave", function () {
-						gui.folders[g].close()
-					})
-					gui.folders[g].domElement.addEventListener("mouseenter", function () {
-						gui.folders[g].open()
+					gui.folders[g].domElement.addEventListener("click", function () {
+						for (let ag = 0; ag < gui.folders.length; ag++) {
+							if (ag !== g) { gui.folders[ag].close() }
+						}
 					})
 				}
 			}
-
 
 			CadPolairesEx.close()
 			BifilairesEx.close()

@@ -5,11 +5,11 @@
 	<title>three.js webgl - convex geometry</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-	<link type="text/css" rel="stylesheet" href="main221130.css">
+	<link type="text/css" rel="stylesheet" href="./main2023-04-10.css">
 </head>
 
 <body>
-	<script src="./parser.js"></script>
+	<!-- <script src="./parser.js"></script> -->
 	<div id="info"> 
 		<h1>Polyhedrics Sundials</h1>	
 		Library 3D: <a href="https://threejs.org" target="_blank" >Three.js</a> <br>
@@ -142,49 +142,61 @@
 				
 				points = new THREE.Points( pointsGeometry, pointsMaterial );
 				group.add( points );
-				console.log(points)
+				//console.log(points)
 				//meshPolyedre.lookAt(new THREE.Vector3(0,0,1000))
 				//console.log(meshPolyedre)
 			}
 
 			function displayFace(Pol, nf) {
-				let nSommetsParFace=0,a,b,c,c1,c2,axey
+				let nSommetsParFace = 0, a, b, c, c1, c2, axey
 
-				if (meshFace != undefined) { meshFace.geometry.dispose();group.remove(meshFace)}
+				if (meshFace != undefined) { meshFace.geometry.dispose(); group.remove(meshFace) }
 				nbFaces = Pol.face.length
-				if (nf>=nbFaces){nf=nbFaces-1}
+				if (nf >= nbFaces) { nf = nbFaces - 1 }
 				const verticesFace = []
 				const k = 5
 				let sx = 0, sy = 0, sz = 0
 				for (let i = 0; i < Pol.face[nf].length; i++) {
 					const j = Pol.face[nf][i]
-					nSommetsParFace=Pol.face[nf].length
+					nSommetsParFace = Pol.face[nf].length
 					const v = Pol.vertex[j]
-					sx += v[0]*k; sy += v[1]*k; sz += v[2]*k
-					
+					sx += v[0] * k; sy += v[1] * k; sz += v[2] * k
+
 					const verticeFace = new THREE.Vector3(v[0] * k, v[1] * k, v[2] * k);
 					verticesFace.push(verticeFace);
-					if(i==0){a=verticeFace.clone()}
-					if(i==1){b=verticeFace.clone()}
-					if(i==2){c=verticeFace.clone()}
-				 }
-				c1= new THREE.Vector3();c2= new THREE.Vector3()
-				c1.subVectors(b,a)
-				c2.subVectors(c,b)		
-				c1.cross(c2).normalize()	
-				normalFace=c1.clone()		
-				
-				
+					if (i == 0) { a = verticeFace.clone() }
+					if (i == 1) { b = verticeFace.clone() }
+					if (i == 2) { c = verticeFace.clone() }
+				}
+				c1 = new THREE.Vector3(); c2 = new THREE.Vector3()
+				c1.subVectors(b, a)
+				c2.subVectors(c, b)
+				c1.cross(c2).normalize()
+				normalFace = c1.clone()
 
-// 				const dirFace2=new THREE.Vector3(normalFace.x,0,normalFace.z)
-// 				dirFace2.normalize()
-// 				quaternion.setFromUnitVectors ( normalFace, dirFace2 ) 
-// console.log(dirFace2)
-				verticesFace.push(new THREE.Vector3(sx / nSommetsParFace, sy / nSommetsParFace, sz / nSommetsParFace))
+
+
+				// 				const dirFace2=new THREE.Vector3(normalFace.x,0,normalFace.z)
+				// 				dirFace2.normalize()
+				// 				quaternion.setFromUnitVectors ( normalFace, dirFace2 ) 
+				// console.log(dirFace2)
+				const centerFace = new THREE.Vector3(sx / nSommetsParFace, sy / nSommetsParFace, sz / nSommetsParFace)
+				verticesFace.push(centerFace)
 				const meshGeometry = new ConvexGeometry(verticesFace);
 				meshFace = new THREE.Mesh(meshGeometry, meshMaterialFace);
 				group.add(meshFace);
 				//console.log(meshFace.rotation)
+
+
+				const gnomonGeometry = new THREE.CylinderGeometry(0.1, 0.1, 2)
+				const gnomon = new THREE.Mesh(gnomonGeometry)
+				meshFace.add(gnomon)
+				//group.add(gnomon)
+				gnomon.position.set(centerFace.x,centerFace.y,centerFace.z)
+				gnomon.rotation.set(Math.PI*0.5,0,0)
+				
+				
+				//gnomon.lookAt(normalFace)
 			}
 
 
@@ -200,11 +212,12 @@
 						group.setRotationFromQuaternion(quaternion)
 					},
 					rotationSud() {
-						const v1 = new THREE.Vector3(normalFace.x, 0, normalFace.z)
-						v1.normalize()
-						const v2 = new THREE.Vector3(0, 0, 1)
-						group.rotateY(v1.angleTo(v2))
-						//group.setRotationFromQuaternion ( quaternion ) 
+						// const v1 = new THREE.Vector3(0,normalFace.y, normalFace.z)
+						// v1.normalize()
+						quaternion.setFromUnitVectors ( normalFace, new THREE.Vector3(0, 0, 1) )
+						// const v2 = new THREE.Vector3(0, 0, 1)
+						// group.rotateY(v1.angleTo(v2))
+						group.setRotationFromQuaternion ( quaternion ) 
 					}
 				};
 
@@ -274,9 +287,8 @@
 			//group.lookAt(new THREE.Vector3(0,0,-1))
 			//console.log(meshPolyedre)
 
-			let zFunc = Parser.parse("x^2+y^2+sin(x)+log(y)").toJSFunction( ['x','y'] );
-
-            console.log(zFunc(2,3))
+//			let zFunc = Parser.parse("x^2+y^2+sin(x)+log(y)").toJSFunction( ['x','y'] );
+//           console.log(zFunc(2,3))
 
 
 		}

@@ -28,9 +28,10 @@ export let cs = {
 	decli: 0,
 	incli: 90,
 	rot: 0,
-	zfxy:"sin(50*sqrt(x*x+y*y))",
+	zfxy:"sin(20*sqrt(x*x+y*y))",
 
 	hgnomon: 50,
+	hgnomonBord:0,  //hauteur du bord du trapeze
 	egnomon: 1,
 	xgnomon: 0,
 	ygnomon: 100,
@@ -134,10 +135,10 @@ export let cs = {
 	vrotscene: 0,
 	vrotSun: 0,
 	linkMedia: "",
-	autoCloseMenu: false,
+	autoCloseMenu: true,
 	//comments:"http://",
 	//backgroundColor
-	background: "rgb(0,0,0)",	
+	background: "rgb(0,30,30)",	
 	//export
 	unitSVG: 'auto',
 	separateurCSV: ";",
