@@ -3,7 +3,7 @@
 Version 2.1 du 2013-06-21
 
 
-    Avertissement
+     Avertissement
 
 Ce contrat est une licence de logiciel libre issue d'une concertation
 entre ses auteurs afin que le respect de deux grands principes préside à
