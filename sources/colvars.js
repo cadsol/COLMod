@@ -7,17 +7,18 @@ import {
 	september,
 	december
 } from '../astronomia-master/src/solstice.js';
+import { POLYHEDRA } from './polyhedra.js';
 
 //export const SP = "Polar or straight style", BF = "Bifilar (vertical)", BFG = 'Bifilar generalised', ANL = 'Analemmatic';///+++
 export const SP = "Polar or straight style", BF = "Bifilar (vertical)", BFG = 'Bifilar generalised', ANL = 'Analemmatic', RTS='Ray tracing sundial';///+++
 
-
+//export let cadran;
  
 export let cs = {
 	version: "",
 	hsol: 13,
 	dayofYear: 105,
-	year: 2022,
+	year: 2023,
 
 	//geometry 
 	typeCadran: SP,// {value:SP,comment:"Sundial type"},
@@ -28,7 +29,7 @@ export let cs = {
 	decli: 0,
 	incli: 90,
 	rot: 0,
-	zfxy:"sin(50*sqrt(x*x+y*y))",
+	zfxy:"sin(25*sqrt(x*x+y*y))",
 	hgnomon: 50,
 	egnomon: 1,
 	xgnomon: 0,
@@ -40,6 +41,7 @@ export let cs = {
 	angleStyleSousstylaire: 0,
 	xPole: 0,
 	yPole: 0,
+	hgnomonBord:0,
 	///++++
 	xdirect: 0,			// Direction en ° /centre de projection cadran analemmatique, positif à droite du cadran
 	ydirect: 0,			// Directionen ° /centre de projection cadran analemmatique, positif en haut du cadran
@@ -96,6 +98,9 @@ export let cs = {
 	heuresItaliques: false,
 	heuresSideralesWS: false,
 	heuresSideralesSA: false,
+	heuresPlanetairesWS: false,
+	heuresPlanetairesSA: false,
+	
 	colorHS: "rgb(200,0,0)",
 	colorHLSummerAutums: "rgb(0,200,5)",
 	colorHLWinterSpring: "rgb(0,0,200)",
@@ -104,6 +109,8 @@ export let cs = {
 	colorHeuresItaliques: "rgb(0,150,100)",
 	colorHeuresSDSA: "rgb(100,100,10)",
 	colorHeuresSDWS: "rgb(102,16,10)",
+	colorHeuresHPSA: "rgb(1,100,10)",
+	colorHeuresHPWS: "rgb(1,16,10)",
 	textSizeHS: 1,
 	textSizeSA: 1,
 	textSizeWS: 1,
@@ -112,6 +119,8 @@ export let cs = {
 	textSizeHI: 1,
 	textSizeSDSA: 1,
 	textSizeSDWS: 1,
+	textSizeHPSA: 1,
+	textSizeHPWS: 1,
 	hoursTextSize: 1,
 	subDivisions: 1,
 	precisionHours: 5,   // un point tous les 5 jours, tous les jours au voisinage des solstices 
@@ -136,13 +145,35 @@ export let cs = {
 	autoCloseMenu: false,
 	//comments:"http://",
 	//backgroundColor
-	background: "rgb(0,0,0)",	
+	background: "rgb(60,100,140)",	
 	//export
 	unitSVG: 'auto',
 	separateurCSV: ";",
 	nameFile: "mySundial",
-	export: "Sundial(.JSON)"
-};
+	export: "Sundial(.JSON)",
+
+	// polyedres
+	typePolyedre:"Dodecahedron", // par defaut
+	rayonPolyedre:200,
+	
+	paramfacePolyedre:{  // pour initialisation
+		x:0,y:0,z:0,  // sommet du style droit en coord.locales
+		heuresSolaires: false,
+		heuresLegalesSummerAutums: false,
+		heuresLegalesWinterSpring: false,
+		heuresAntiques: false,
+		heuresBabyloniques: false,
+		heuresItaliques: false,
+		heuresSideralesWS: false,
+		heuresSideralesSA: false,
+		heuresPlanetairesWS: false,
+		heuresPlanetairesSA: false,
+		equinoxeAndSolstices: false,
+		datesArcsDiurnes: [] // [[date, dec en rad]]  tableau à deux dimensions
+	},
+	
+	paramfacesPolyedre:[] // tableau des paramfacePolyedre}
+}
 
 // ----------------------------------------------------------------------------------------------------
 export function HTLM(cs) {
