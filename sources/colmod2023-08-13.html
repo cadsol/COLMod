@@ -981,84 +981,94 @@
 
 
 			if (cs.typeCadran == SP) {
-				
-					xp=cs.xPole + cs.xgnomon; yp=cs.yPole + cs.ygnomon;zp=(cs.epaisseur /* + cs.egnomon*/) / 2
-					xg=cs.xgnomon ; yg= cs.ygnomon; zg= cs.hgnomon + (cs.epaisseur /*+ cs.egnomon*/) / 2
-					let v1 = new THREE.Vector3( xp,yp,zp ) // pied  style droit
-					let v2 = new THREE.Vector3( xg,yg,zg ) // sommet style droit				
-					let v3 = new THREE.Vector3(xp, yp,zp)  //pole du style
-					let v4 = new THREE.Vector3(xg, yg,zp)  // bis, il faut 4 points pour ConvexGeometry
-					cs.hgnomonBord=0
 
-					if ((!pointDansCadran(xp, yp))&&(pointDansCadran(xg, yg))) {
+				xp = cs.xPole + cs.xgnomon; yp = cs.yPole + cs.ygnomon; zp = (cs.epaisseur /* + cs.egnomon*/) / 2
+				xg = cs.xgnomon; yg = cs.ygnomon; zg = cs.hgnomon + (cs.epaisseur /*+ cs.egnomon*/) / 2
+				let v1 = new THREE.Vector3(xp, yp, zp) // pied  style droit
+				let v2 = new THREE.Vector3(xg, yg, zg) // sommet style droit				
+				let v3 = new THREE.Vector3(xp, yp, zp)  //pole du style
+				let v4 = new THREE.Vector3(xg, yg, zp)  // bis, il faut 4 points pour ConvexGeometry
+				cs.hgnomonBord = 0
+
+				if ((!pointDansCadran(xp, yp)) && (pointDansCadran(xg, yg))) {
 					let alpha = Math.atan((cs.xPole / cs.yPole)) * 180 / Math.PI  //angle: sousstylaire avec verticale
 					if (TracerFil(90 - alpha, 0, 0)) {                            // appel algo des cadrans bifilaires-> intersections avec les bords
-							let tanSS = Math.tan(cs.angleStyleSousstylaire * Math.PI / 180)
-							h1 = Math.sqrt((xp-x10)*(xp-x10)+(yp-y10)*(yp-y10)) * tanSS
-							h2 = Math.sqrt((xp-x20)*(xp-x20)+(yp-y20)*(yp-y20)) * tanSS
-							if (h1 <= h2) {				
-								cs.hgnomonBord=h1
-								v1 = new THREE.Vector3(x10, y10, zp + h1)
-								v3 = new THREE.Vector3(x10, y10, zp)
-							} else {
-								cs.hgnomonBord=h2
-								v1 = new THREE.Vector3(x20, y20, zp + h2)
-								v3 = new THREE.Vector3(x20, y20, zp)
-							}						
+						let tanSS = Math.tan(cs.angleStyleSousstylaire * Math.PI / 180)
+						h1 = Math.sqrt((xp - x10) * (xp - x10) + (yp - y10) * (yp - y10)) * tanSS
+						h2 = Math.sqrt((xp - x20) * (xp - x20) + (yp - y20) * (yp - y20)) * tanSS
+						if (h1 <= h2) {
+							cs.hgnomonBord = h1
+							v1 = new THREE.Vector3(x10, y10, zp + h1)
+							v3 = new THREE.Vector3(x10, y10, zp)
+						} else {
+							cs.hgnomonBord = h2
+							v1 = new THREE.Vector3(x20, y20, zp + h2)
+							v3 = new THREE.Vector3(x20, y20, zp)
 						}
 					}
+				}
 
-					let GeometryBout = new THREE.SphereGeometry( cs.egnomon, 32, 16 );
-					BoutStyle = new THREE.Mesh(GeometryBout, materialGnomon);
-					BoutStyle.castShadow = true
-					cadranSolaireGroup.add(BoutStyle)
-					BoutStyle.position.set(xg,yg,zg)
-					BoutStyle.visible=cs.vstyle
 
-					FinStyle=new THREE.Mesh(GeometryBout, materialGnomon);
+				console.log(cs.angleStyleSousstylaire, [v1, v2, v3, v4])
+
+				let GeometryBout = new THREE.SphereGeometry(cs.egnomon, 32, 16);
+				BoutStyle = new THREE.Mesh(GeometryBout, materialGnomon);
+				BoutStyle.castShadow = true
+				cadranSolaireGroup.add(BoutStyle)
+				BoutStyle.position.set(xg, yg, zg)
+				BoutStyle.visible = cs.vstyle
+
+				//if(cs.angleStyleSousstylaire!=0){
+				try {
+					FinStyle = new THREE.Mesh(GeometryBout, materialGnomon);
 					cadranSolaireGroup.add(FinStyle)
 					FinStyle.castShadow = true
-					FinStyle.position.set(v1.x,v1.y,v1.z)
-					FinStyle.visible=cs.vstyle
+					FinStyle.position.set(v1.x, v1.y, v1.z)
+					FinStyle.visible = cs.vstyle
 
 					let tubeGeometrySB = new THREE.TubeGeometry(new THREE.LineCurve3(v1, v3), 16, cs.egnomon, 8);
 					styleBord = new THREE.Mesh(tubeGeometrySB, materialGnomon);
 					styleBord.castShadow = true
 					cadranSolaireGroup.add(styleBord)
-					styleBord.visible=cs.vstyle
+					styleBord.visible = cs.vstyle
 
 					let tubeGeometrySP = new THREE.TubeGeometry(new THREE.LineCurve3(v1, v2), 16, cs.egnomon, 8);
 					stylePolaire = new THREE.Mesh(tubeGeometrySP, materialGnomon);
 					stylePolaire.castShadow = true
 					cadranSolaireGroup.add(stylePolaire)
-					stylePolaire.visible=cs.vstyle
+					stylePolaire.visible = cs.vstyle
 
 					let tubeGeometrySS = new THREE.TubeGeometry(new THREE.LineCurve3(v3, v4), 16, cs.egnomon, 8);
 					sousStylaire = new THREE.Mesh(tubeGeometrySS, materialGnomon);
 					sousStylaire.castShadow = true
 					cadranSolaireGroup.add(sousStylaire)
-					sousStylaire.visible=cs.vsousstyle			
-// const v1d=v1.addScalar(cs.egnomon*0.5)  [v1d,v2d,v3d,v4d,v1g,v2g,v3g,v4g] 
-// const v2d=v2.addScalar(cs.egnomon*0.5)
-// const v3d=v3.addScalar(cs.egnomon*0.5)
-// const v4d=v4.addScalar(cs.egnomon*0.5)
-// const v1g=v1.addScalar(-cs.egnomon*0.5)
-// const v2g=v2.addScalar(-cs.egnomon*0.5)
-// const v3g=v3.addScalar(-cs.egnomon*0.5)
-// const v4g=v4.addScalar(-cs.egnomon*0.5)
-					if(cs.angleStyleSousstylaire!=0){
-						stylePlan = new THREE.Mesh( new ConvexGeometry( [v1,v2,v3,v4]), materialGnomon )	//triangle ou trapeze				
-						stylePlan.castShadow = true
-						//stylePlan.receiveShadow = true
-						cadranSolaireGroup.add(stylePlan)
-						stylePlan.visible=cs.vstyle}
+					sousStylaire.visible = cs.vsousstyle
+					// const v1d=v1.addScalar(cs.egnomon*0.5)  [v1d,v2d,v3d,v4d,v1g,v2g,v3g,v4g] 
+					// const v2d=v2.addScalar(cs.egnomon*0.5)
+					// const v3d=v3.addScalar(cs.egnomon*0.5)
+					// const v4d=v4.addScalar(cs.egnomon*0.5)
+					// const v1g=v1.addScalar(-cs.egnomon*0.5)
+					// const v2g=v2.addScalar(-cs.egnomon*0.5)
+					// const v3g=v3.addScalar(-cs.egnomon*0.5)
+					// const v4g=v4.addScalar(-cs.egnomon*0.5)
 
-					cadranSolaireGroup.add(gnomon);
+					stylePlan = new THREE.Mesh(new ConvexGeometry([v1, v2, v3, v4]), materialGnomon)	//triangle ou trapeze	
+					stylePlan.castShadow = true
+
+					cadranSolaireGroup.add(stylePlan)
+					stylePlan.visible = cs.vstyle
 
 					ligneSVG(v1.x, v1.y, v4.x, v4.y)
 					croixSVG(v4.x, v4.y)
-					
+				}
+
+				catch (e) { }
+				
+				cadranSolaireGroup.add(gnomon);
 			}
+			
+
+
 
 			if (cs.typeCadran == BF) {
 				calculg1g2k1k2()

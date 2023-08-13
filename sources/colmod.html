@@ -341,6 +341,7 @@
 		const geometryCSsph = new THREE.SphereGeometry(0.5,64,64);
 		const geometryCScone = new THREE.ConeGeometry(0.5,1,64,64);
 		
+		
 		// ***********************************************************************************************************************************
 		const cadranBox = new THREE.Mesh(geometryCSbox, materialCS);
 		const cadranCyl = new THREE.Mesh(geometryCScyl, materialCS);
@@ -490,6 +491,8 @@
 
 		const plyloader = new PLYLoader();
 		const objloader= new OBJLoader()
+
+		let  QuaternionTexte= new THREE.Quaternion()
 
 		//let rayOrigin = new THREE.Vector3();    // origine du rayon lumineux virtuel : centre du tore de coord. cs.xgnomon,  cs.ygnomon cs.zgnomon
 
@@ -677,6 +680,8 @@
 			mesh.position.x = x;
 			mesh.position.y = y;
 			mesh.position.z = z;
+			
+			if(cs.typeForme=="polyedric") {	mesh.applyQuaternion (QuaternionTexte)}
 
 			if (SVGtext.length > 0) {
 				x = x + cs.largeur / 2; y = -y + cs.hauteur / 2;
@@ -1012,7 +1017,7 @@
 					let v3 = new THREE.Vector3(xp, yp,zp)  //pole du style
 					let v4 = new THREE.Vector3(xg, yg,zp)  // bis, il faut 4 points pour ConvexGeometry
 					cs.hgnomonBord=0
-
+					console.log( [v1,v2,v3,v4])
 					if ((!pointDansCadran(xp, yp))&&(pointDansCadran(xg, yg))) {
 					let alpha = Math.atan((cs.xPole / cs.yPole)) * 180 / Math.PI  //angle: sousstylaire avec verticale
 					if (TracerFil(90 - alpha, 0, 0)) {                            // appel algo des cadrans bifilaires-> intersections avec les bords
@@ -1030,20 +1035,20 @@
 							}						
 						}
 					}
-
+					console.log("->", [v1,v2,v3,v4])
 					let GeometryBout = new THREE.SphereGeometry( cs.egnomon, 32, 16 );
 					BoutStyle = new THREE.Mesh(GeometryBout, materialGnomon);
 					BoutStyle.castShadow = true
 					cadranSolaireGroup.add(BoutStyle)
 					BoutStyle.position.set(xg,yg,zg)
 					BoutStyle.visible=cs.vstyle
-
+try {
 					FinStyle=new THREE.Mesh(GeometryBout, materialGnomon);
 					cadranSolaireGroup.add(FinStyle)
 					FinStyle.castShadow = true
 					FinStyle.position.set(v1.x,v1.y,v1.z)
 					FinStyle.visible=cs.vstyle
-
+					
 					let tubeGeometrySB = new THREE.TubeGeometry(new THREE.LineCurve3(v1, v3), 16, cs.egnomon, 8);
 					styleBord = new THREE.Mesh(tubeGeometrySB, materialGnomon);
 					styleBord.castShadow = true
@@ -1069,13 +1074,15 @@
 // const v2g=v2.addScalar(-cs.egnomon*0.5)
 // const v3g=v3.addScalar(-cs.egnomon*0.5)
 // const v4g=v4.addScalar(-cs.egnomon*0.5)
-					stylePlan = new THREE.Mesh( new ConvexGeometry( [v1,v2,v3,v4]), materialGnomon )	//triangle ou trapeze				
-					stylePlan.castShadow = true
-					//stylePlan.receiveShadow = true
-					cadranSolaireGroup.add(stylePlan)
-					stylePlan.visible=cs.vstyle
-
-					cadranSolaireGroup.add(gnomon);
+					
+						stylePlan = new THREE.Mesh( new ConvexGeometry( [v1,v2,v3,v4]), materialGnomon )	//triangle ou trapeze				
+						stylePlan.castShadow = true
+						//stylePlan.receiveShadow = true
+						cadranSolaireGroup.add(stylePlan)
+						stylePlan.visible=cs.vstyle
+					    }catch (e) { }
+						
+					cadranSolaireGroup.add(gnomon)
 
 					ligneSVG(v1.x, v1.y, v4.x, v4.y)
 					croixSVG(v4.x, v4.y)
@@ -1830,9 +1837,12 @@
 
 		// ---------------------------------------------------------------------------------------------------
 		function eulerCsGroup() {
-			const a = new THREE.Euler((cs.incli - 90) / 180 * Math.PI, cs.decli / 180 * Math.PI, cs.rot / 180 * Math.PI, 'YXZ');
+			
 			if   ((cs.typeCadran == RTS)&&(cs.typeForme=="polyedric")) {displayFaces(polyhedre)}
-			else {cadranSolaireGroup.setRotationFromEuler(a)}
+			else {
+				const a = new THREE.Euler((cs.incli - 90) / 180 * Math.PI, cs.decli / 180 * Math.PI, cs.rot / 180 * Math.PI, 'YXZ');
+				cadranSolaireGroup.setRotationFromEuler(a)
+				}
 			
 		}
 
@@ -2060,9 +2070,11 @@
 				function TracerCadranPolyedrique() {
 					//effacelisteMesh(heuresSolairesListeMesh,heuresSolairesGroup)
 					//gnomon.visible=false
-					cs.axesXYZ=true
+					cs.axesXYZ=false
 					//axeX.visible = false; axeY.visible = false; axeZ.visible = false
 					cs.decli=0;cs.incli=90	;cs.rot=0
+					const a = new THREE.Euler((cs.incli - 90) / 180 * Math.PI, cs.decli / 180 * Math.PI, cs.rot / 180 * Math.PI, 'YXZ');
+				    cadranSolaireGroup.setRotationFromEuler(a)
 					EcrireXYZ()
 					initPol(gui)
 					voirSectionPoly(true)
@@ -3477,20 +3489,27 @@
 
 	///////////////////////////////////////////////////////////////////POLYEDRES/////////////////////////////////////////////////////////////////////////
 
-	let categoryFolders, meshFace, gnomonGeometry, meshFacesGroup,
+	let categoryFolders, meshFace, gnomonGeometry, 
 		nbFaces, nFace, guiSectionPoly, guichoixPoly,
 		quaternion = new THREE.Quaternion(),
-		torePoly, cadranPoly, polyhedre,styleToriquePoly,geoTorePoly
-		//const axesCadranHelper = new THREE.AxesHelper(600);
-	let meshFaces = [], meshGnomons = [], normalFaces = [], centreFaces = [],hauteursGnomons=[],centerFaces=[]
+		polyhedre,styleToriquePoly,geoTorePoly
+	let meshFacesGroup = new THREE.Group()
+	let meshFaces = [], meshGnomons = [], normalsFaces = [] ,hauteursGnomons=[],centersFaces=[]
 	
+	
+	function TracerGnomonPoly(h){
+		const geometryGnomonPoly = new THREE.CylinderGeometry(cs.egnomon, cs.egnomon, h, 16, 16);
+	    let gnomonPoly = new THREE.Mesh(geometryGnomonPoly, materialGnomon)
+		return gnomonPoly
+	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	function displayFaces(Pol) {
 		let nSommetsParFace = 0, v,h
-
+        let gnomonPoly
 		let a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), 
 		        normalFace = new THREE.Vector3(),Oworld=new THREE.Vector3(0,0,0)
-	    normalFaces = [], centreFaces = [],hauteursGnomons=[],centerFaces=[]
+
+	    normalsFaces = [], hauteursGnomons=[],centersFaces=[]
 		
 		//cs.decli=0;cs.incli=90;cs.rot=0;eulerCsGroup()
 		effacelisteMesh(meshFaces, meshFacesGroup)
@@ -3499,7 +3518,7 @@
 		
 		const R = cs.rayonPolyedre
 		cs.typePolyedre = Pol.name
-		meshFaces = [], meshGnomons = [], normalFaces = []
+		meshFaces = [], meshGnomons = [], normalsFaces = []
 		cs.paramfacesPolyedre = []
 
 		for (let f = 0; f < nbFaces; f++) 
@@ -3526,66 +3545,70 @@
 			}
 			b.sub(a); c.sub(a)
 			normalFace.crossVectors(b, c).normalize()
-			normalFaces.push(normalFace)
-			const centerFace = new THREE.Vector3(sx / nSommetsParFace, sy / nSommetsParFace, sz / nSommetsParFace)
-			centerFaces.push (centerFace)
-			verticesFace.push(Oworld)
 			
+			normalsFaces.push(normalFace.toArray())
+			
+			
+			const centerFace = new THREE.Vector3(sx / nSommetsParFace, sy / nSommetsParFace, sz / nSommetsParFace)
+			centersFaces.push (centerFace)
+			//verticesFace.push(Oworld)--------------------------------------------------------
+			verticesFace.push(centerFace)
+
 			const meshGeometry = new ConvexGeometry(verticesFace);
 			meshFace = new THREE.Mesh(meshGeometry, materialCS);
 			meshFace.lookAt(new THREE.Vector3(0,0,0))
 			meshFace.receiveShadow = true
 			meshFaces.push(meshFace)
 			meshFacesGroup.add(meshFace)
-			h=centerFace.distanceTo(a) / 3 *2
+			h=centerFace.distanceTo(a) / 3
 			// cs.paramfacePolyedre.z = h
 			// cs.paramfacesPolyedre.push(cs.paramfacePolyedre)
 			//cs.paramfacesPolyedre[f].z=h
 			
-			const geometryGnomonPoly = new THREE.CylinderGeometry(cs.egnomon, cs.egnomon, h, 16,16);
-			let gnomon = new THREE.Mesh(geometryGnomonPoly, materialGnomon)
-			//gnomon.scale.set(cs.egnomon, h, cs.egnomon)
 			
-			//meshFace.add(gnomon)
+			//gnomon.scale.set(cs.egnomon, h, cs.egnomon)
+			gnomonPoly=TracerGnomonPoly(h)
+			meshFace.add(gnomonPoly)
 			normalFace.add(centerFace)
-			gnomon.position.x = centerFace.x
-			gnomon.position.y = centerFace.y
-			gnomon.position.z = centerFace.z
+			gnomonPoly.position.x = centerFace.x
+			gnomonPoly.position.y = centerFace.y
+			gnomonPoly.position.z = centerFace.z
 
-			gnomon.lookAt(normalFace)
-			gnomon.rotateX(Math.PI / 2)
-			gnomon.castShadow = true
-			gnomon.receiveShadow = false
-			gnomon.translateX(20)//cs.paramfacePolyedre.x)
-			gnomon.translateZ(-10)//cs.paramfacePolyedre.y)
-			gnomon.translateY(h / 2)
-			meshFacesGroup.add(gnomon)
-			meshFace.add(gnomon)
-			meshGnomons.push(gnomon)
+			gnomonPoly.lookAt(normalFace)
+			gnomonPoly.rotateX(Math.PI / 2)
+			
+			gnomonPoly.translateX(0)//cs.paramfacePolyedre.x)
+			gnomonPoly.translateZ(-0)//cs.paramfacePolyedre.y)
+			gnomonPoly.translateY(h / 2)
+			meshFacesGroup.add(gnomonPoly)
+			meshFace.add(gnomonPoly)
+			meshGnomons.push(gnomonPoly)
 			hauteursGnomons.push(h)	 
-			//console.log(gnomon)		
+			gnomonPoly.castShadow = true
+			gnomonPoly.receiveShadow = false
+			//console.log(meshGnomons[f].quaternion)		
 		} //f
 		for (let f = 0; f < nbFaces; f++) {
 			cs.paramfacesPolyedre[f].x=meshGnomons[f].position.x
 			cs.paramfacesPolyedre[f].y=meshGnomons[f].position.z
 			cs.paramfacesPolyedre[f].z=meshGnomons[f].position.y
 		}
+		
 		//nFace = 0
 		cadran = meshFaces[nFace].clone()
 		cadranSolaireGroup.add(meshFacesGroup)
 		PlacerStyleToriquePoly(nFace,hauteursGnomons[nFace])
-		guichoixPoly.close()
-		//TracerHeuresEtA/Trcs()
+		guichoixPoly.close()		
 		
 	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	function PlacerOrigine(n){
-		if (cs.typeForme=="polyedric"){
-		rayOrigin=styleToriquePoly.position.clone()
-		meshGnomons[n].localToWorld(rayOrigin)
-		PlacerLeSoleil()
-	    console.log(rayOrigin) }
-		}
+	// function PlacerOrigine(n){
+	// 	if (cs.typeForme=="polyedric"){
+	// 	rayOrigin=styleToriquePoly.position.clone()
+	// 	meshGnomons[n].localToWorld(rayOrigin)
+	// 	PlacerLeSoleil()
+	//     console.log(rayOrigin) }
+	// 	}
 
 	function PlacerStyleToriquePoly(n,h) {
 		// if(styleToriquePoly!=undefined){styleToriquePoly.geometry.dispose()
@@ -3593,8 +3616,19 @@
 		// const k=Math.max(cs.egnomon,0.2)
 	    // const geoTorePoly= new THREE.TorusGeometry(k*5,k)
 		// styleToriquePoly= new THREE.Mesh(geoTorePoly, materialSun);	
-		cadran=meshFaces[n].clone()
+		// let e=new THREE.Euler()
+		// cadran=meshFaces[n].clone()
+	    // e.setFromQuaternion(cadran.quaternion,"XYZ")
 		
+		// cs.decli=e.x;cs.incli=90+e.y;cs.rot=e.z 
+		// eulerCsGroup()
+				// const no = new THREE.Vector3()
+				// const eul = new THREE.Euler()
+				// quaternion.setFromUnitVectors(no.fromArray(normalsFaces[n]), new THREE.Vector3(0,0,1))
+				// eul.setFromQuaternion ( quaternion, 'YXZ' )
+				// cs.decli=eul.y*180/Math.PI
+				// cs.incli=eul.x*180/Math.PI+90
+				// cs.rot  =eul.z*180/Math.PI
 		meshGnomons[n].receiveShadow=false	
 		styleToriquePoly.receiveShadow=false	
 		styleToriquePoly.castShadow=true	
@@ -3603,11 +3637,14 @@
 		styleToriquePoly.translateY(h/2)
 		rayOrigin=styleToriquePoly.position.clone()
 		meshGnomons[n].localToWorld(rayOrigin)
-		//cadranSolaireGroup.localToWorld(rayOrigin) 
 		styleToriquePoly.receiveShadow=false	
+		//QuaternionTexte=cadran.quaternion
 		PlacerLeSoleil()
-		TracerHeuresEtArcs()
-	
+		// cadran=meshFaces[n].clone()
+		// TracerHeuresEtArcs()
+		        
+				//displayFaces(polyhedre)
+		TracerHeuresEtArcs() 
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	function InitGuiPolyedres(gui, group) {
@@ -3639,48 +3676,79 @@
 				guiSectionPoly.title("POLYEDRA : " + polyhedre.name)
 				nbFaces = polyhedre.face.length
 				nFace = 0
-				cs.decli=0;cs.incli=90;cs.rot=0
-				displayFaces(polyhedre)
-				//cs.decli=0;cs.incli=90;cs.rot=0
+
 				choixFace.max(nbFaces)
 				choixFace.updateDisplay()
+				
+				cs.decli=0;cs.incli=90;cs.rot=0	
 				PlacerStyleToriquePoly(nFace,hauteursGnomons[nFace])
+				displayFaces(polyhedre)
+				TracerHeuresEtArcs()
+				eulerCsGroup()
+				rotationFaces.rotationBase()
+				
 			})
 		}
 
 		for (var arg in categoryFolders) { categoryFolders[arg].close() }
 
 
-		let sundialFace = {
+		let rotationFaces = {
 			face: 1,
 			rotationBase() {
-
-				quaternion.setFromUnitVectors(normalFaces[nFace], new THREE.Vector3(1, 0, 0))
-				cadranSolaireGroup.setRotationFromQuaternion(quaternion)
-				//displayFaces(polyhedre,nFace, group)
-				// const a = new THREE.Euler()
-				// const s = 'YXZ'
-				// a.setFromQuaternion(quaternion,s)
-				// //cs.incli=a.x*180/Math.PI;cs.decli=a.y*180/Math.PI,cs.rot=a.z*180/Math.PI
-				// console.log(s)
-				// cs.decli=0;cs.incli=90;cs.rot=0
-				// //group.rotation=quaternion.identity()
-			}
+				cs.decli=0;cs.incli=90;cs.rot=0
+				displayFaces(polyhedre)
+				const no = new THREE.Vector3()
+				const eul = new THREE.Euler()
+				quaternion.setFromUnitVectors(no.fromArray(normalsFaces[nFace]), new THREE.Vector3(0,-1, 0))
+				eul.setFromQuaternion ( quaternion, 'YXZ' )
+				//cs.decli=eul.y*180/Math.PI
+				cs.decli=0
+				cs.incli=eul.x*180/Math.PI+90
+				cs.rot  =eul.z*180/Math.PI
+				displayFaces(polyhedre)
+				TracerHeuresEtArcs() 
+			 }//,
+			// rotationSud() {
+			// 	//cs.decli=0;cs.incli=90;cs.rot=0
+			// 	//displayFaces(polyhedre)
+			// 	const no1 = new THREE.Vector3()
+			// 	const no2 = new THREE.Vector3()
+			// 	no1.fromArray(normalsFaces[nFace])
+			// 	no1.x=0
+			// 	no1.normalize()
+			// 	no2.fromArray(normalsFaces[nFace])
+			// 	no2.normalize()
+			// 	//console.log(no)
+			// 	const eul = new THREE.Euler()
+			// 	quaternion.setFromUnitVectors( no1,no2)
+			// 	eul.setFromQuaternion ( quaternion, 'YXZ' )
+			// 	//cs.incli=eul.x*180/Math.PI-90
+			// 	cs.decli=-eul.y*180/Math.PI			
+			// 	//cs.rot  =eul.z*180/Math.PI
+			// 	displayFaces(polyhedre)
+			// 	TracerHeuresEtArcs() 
+			// }
 		};
-
-		const choixFace = guiSectionPoly.add(sundialFace, "face", 1, nbFaces,1)
-			.name(" Edit facet ...")
+        
+		const choixFace = guiSectionPoly.add(rotationFaces, "face", 1, nbFaces,1)
+			.name(" Edit facet n°")
 			.onChange(function (f) {
 				nFace = f - 1			
 				if (nFace >= nbFaces) { nFace = 0 }
+				PlacerStyleToriquePoly(nFace,hauteursGnomons[nFace])
+			    })
+			.onFinishChange(function () {
+				PlacerLeSoleil() 
 				displayFaces(polyhedre)
-				//cadran = meshFaces[nFace].clone() 
-				PlacerStyleToriquePoly(nFace,hauteursGnomons[nFace]) 
-				PlacerLeSoleil()            
+				TracerHeuresEtArcs() 		
+				eulerCsGroup()	
+				})        
 
-			})
+			
 
-		const BaseSundial = guiSectionPoly.add(sundialFace, "rotationBase").name("Base facet")
+		const BaseSundial = guiSectionPoly.add(rotationFaces, "rotationBase").name("Base facet")
+	//	const SudSundial = guiSectionPoly.add(rotationFaces, "rotationSud").name("Sud facet")
 
 		guiSectionPoly.close()
 		guichoixPoly.close()
@@ -3695,23 +3763,26 @@
 
 	function initPol(gui) {
 		
+							
 		const k=Math.max(cs.egnomon,0.2)
 	    geoTorePoly= new THREE.TorusGeometry(k*5,k)
+		
 		styleToriquePoly= new THREE.Mesh(geoTorePoly, materialSun);	
-		styleToriquePoly.castShadow = true;	
+		
 		styleToriquePoly.receiveShadow=false
 		polyhedre = POLYHEDRA.Dodecahedron
-		meshFacesGroup = new THREE.Group()
 		nbFaces = polyhedre.face.length
-		cs.opaciteCS = 1
 		
 		nFace = 0
+		cs.decli=0;cs.incli=90;cs.rot=0
 		displayFaces(polyhedre)
 		cadran = meshFaces[0].clone()
-		//cadranSolaireGroup.clear()
-		cs.axesXYZ=true
 		cadranSolaireGroup.add(groupAxes)	
+		displayFaces(polyhedre)
 		TracerHeuresEtArcs()
+		styleToriquePoly.castShadow = true;	
+		//rotationFaces.rotationBase()
+		
 	}
 
 </script>
