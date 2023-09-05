@@ -157,7 +157,7 @@ export let cs = {
 	rayonPolyedre:200,
 	
 	paramfacePolyedre:{  // pour initialisation
-		x:0,y:0,z:0,  // sommet du style droit en coord.locales
+		x:0,y:0,z:50,  // sommet du style droit en coord.locales
 		heuresSolaires: false,
 		heuresLegalesSummerAutums: false,
 		heuresLegalesWinterSpring: false,
