@@ -1699,30 +1699,29 @@
 							H = (i - 12) * 15 / 180 * Math.PI - RA
 							if ((i - 12) < 0) { chiffreH = i + 12 } else { chiffreH = i - 12 }
 						}
-						if (TypeHeure == HPSA) {
-							const RA =-Math.PI-Math.asin(tδ / tan23p44 )
-							const LS =-Math.PI-Math.asin(sδ / sin23p44 )
-							const LE = LS + i * 15 * Math.PI / 180; chiffreH=i						
-							let DE = Math.asin ( Math.sin(LE) * sin23p44)
-							//if(DE>Math.PI/2){DE=Math.PI-DE}
-							let RE = Math.asin ( Math.tan(DE) / tan23p44)
-							//if(RE>Math.PI/2){RE=Math.PI-RE}
-							const T  = Math.acos( -Math.tan(φ ) * Math.tan(DE))
+						if (TypeHeure == HPSA) { // il faut prendre le supplémentaire de RE quand RE et LE ne sont pas dans le même cadran.
+							const RA = Math.PI - Math.asin(tδ / tan23p44)
+							const LS = Math.PI - Math.asin(sδ / sin23p44)
+							const LE = LS + i * 15 * Math.PI / 180; chiffreH = i
+							const DE = Math.asin(Math.sin(LE) * sin23p44)
+							let RE = Math.asin(Math.tan(DE) / tan23p44) + 2 * Math.PI
+							if (LE < 3 * Math.PI / 2) { RE = 3 * Math.PI - RE }
+							const T = Math.acos(-Math.tan(φ) * Math.tan(DE))
 							H = -T - RA + RE
-
-							if (i>12){H=2*H0}
-						    }
-						if (TypeHeure == HPWS) {
+							//if (i==6){console.log(TS.decSuns[j]*180/Math.PI,"RA ° = ",RA*180/Math.PI,"  LE ° = ",LE*180/Math.PI, "   RE ° = ",RE*180/Math.PI)}
+							if (i > 12) { H = 2 * H0 }
+						}
+						if (TypeHeure == HPWS) { // il faut prendre le supplémentaire de RE quand RE et LE ne sont pas dans le même cadran.
 							const RA = Math.asin(tδ / tan23p44)
-							const LS = Math.asin(sδ / sin23p44 )
-							const LE = LS + i * 15/180 * Math.PI ; chiffreH=i 
-							const DE = Math.asin ( Math.sin(LE) * sin23p44)
-							const RE = Math.asin ( Math.tan(DE) / tan23p44)			
-							const T  = Math.acos( -Math.tan(φ) * Math.tan(DE))
-							H =  -T - RA + RE 
-							
-							//if (i==6){console.log(j,RA*180/Math.PI,"RA °",LS*180/Math.PI,"LS °",LE*180/Math.PI,"LE °",DE*180/Math.PI,"DE °",RE*180/Math.PI,"RE °",T*180/Math.PI,"T °",H*180/Math.PI,"H °")}
-							if (i>12){H=2*H0}
+							const LS = Math.asin(sδ / sin23p44)
+							let LE = LS + i * 15 / 180 * Math.PI; chiffreH = i
+							const DE = Math.asin(Math.sin(LE) * sin23p44)
+							let RE = Math.asin(Math.tan(DE) / tan23p44)
+							if (LE > Math.PI / 2) { RE = Math.PI - RE }
+							const T = Math.acos(-Math.tan(φ) * Math.tan(DE))
+							H = -T - RA + RE
+							//if (i==6){console.log(TS.decSuns[j]*180/Math.PI,"RA ° = ",RA*180/Math.PI,"  LE ° = ",LE*180/Math.PI, "   RE ° = ",RE*180/Math.PI)}
+							if (i > 12) { H = 2 * H0 }
 						}
 						const aH = Math.abs(H)
 						const [sH, cH] = base.sincos(H)
@@ -3121,8 +3120,7 @@
 					    };
 					if (e =="Params (.HTML)"){saveString(HTLM(cs), cs.nameFile + '.html')}
 					if (cs.typeForme == "polyedric") { Poly2D = false; TracerHeuresEtArcs() 
-					EcrireXYZ()
-				}
+					EcrireXYZ()}
 			}}
 
 
@@ -3943,7 +3941,7 @@
 		
 		// styleToriquePoly= new THREE.Mesh(geoTorePoly, materialSun);	
 		
-		
+		//Poly2D=true
 		polyhedre = POLYHEDRA.Dodecahedron
 		nbFaces = polyhedre.face.length
 		cs.xgnomon=0;cs.ygnomon=0
