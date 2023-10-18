@@ -109,8 +109,8 @@ export let cs = {
 	colorHeuresItaliques: "rgb(0,150,100)",
 	colorHeuresSDSA: "rgb(100,100,10)",
 	colorHeuresSDWS: "rgb(102,16,10)",
-	colorHeuresHPSA: "rgb(1,100,10)",
-	colorHeuresHPWS: "rgb(1,16,10)",
+	colorHeuresHPSA: "rgb(250,250,10)",
+	colorHeuresHPWS: "rgb(1,250,10)",
 	textSizeHS: 1,
 	textSizeSA: 1,
 	textSizeWS: 1,
@@ -155,10 +155,10 @@ export let cs = {
 	// polyedres
 	typePolyedre:"Dodecahedron", // par defaut
 	rayonPolyedre:200,
-	
+	conicity:2,
 	paramfacePolyedre:{  // pour initialisation
-		x:0,y:0,z:50,  // sommet du style droit en coord.locales
-		heuresSolaires: false,
+		x:0,y:0,z:50,  // sommet du style droit en coord.locales		
+		heuresSolaires: true,
 		heuresLegalesSummerAutums: false,
 		heuresLegalesWinterSpring: false,
 		heuresAntiques: false,
@@ -169,7 +169,9 @@ export let cs = {
 		heuresPlanetairesWS: false,
 		heuresPlanetairesSA: false,
 		equinoxeAndSolstices: false,
-		datesArcsDiurnes: [] // [[date, dec en rad]]  tableau à deux dimensions
+		datesArcsDiurnes: [[]], // [[date, dec en rad]]  tableau à deux dimensions
+		devx:-50,devy:50,
+		devFace:""
 	},
 	
 	paramfacesPolyedre:[] // tableau des paramfacePolyedre}
@@ -460,34 +462,7 @@ export function eclair() {
 	return [amn, a1, a2, amx];
 }
 
-// Import
 
-// var form = document.createElement( 'form' );
-// form.style.display = 'none';
-// document.body.appendChild( form );
-
-// var fileInput = document.createElement( 'input' );
-// fileInput.multiple = true;
-// fileInput.type = 'file';
-// fileInput.addEventListener( 'change', function () {
-
-// 	editor.loader.loadFiles( fileInput.files );
-// 	form.reset();
-
-// } );
-// form.appendChild( fileInput );
-
-// var option = new UIRow();
-// option.setClass( 'option' );
-// option.setTextContent( strings.getKey( 'menubar/file/import' ) );
-//option.onClick( function () {
-
-//	fileInput.click();
-
-//} );
-//options.add( option );
-
-//
 
 
 
