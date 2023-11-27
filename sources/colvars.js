@@ -87,10 +87,10 @@ export let cs = {
 	offset_string: "",
 	now_in_dst: 0,
 	dst: 0,
-	autoLocation: false,
+	autoLocation:false,
 
 	// hours
-	heuresSolaires: true,
+	heuresSolaires:true,
 	heuresLegalesSummerAutums: false,
 	heuresLegalesWinterSpring: false,
 	heuresAntiques: false,
@@ -128,7 +128,7 @@ export let cs = {
 	//arcs diurnes
 	equinoxeAndSolstices: false,
 	colorequinoxeAndSolstice: "rgb(152,0,0)",
-	datesArcsDiurnes: [],  // [[date, dec en rad]]  tableau à deux dimensions
+	datesArcsDiurnes: [[]],  // [[date, dec en rad]]  tableau à deux dimensions
 	precisionArcs: 15,   // un point toutes les 15 minutes
 
 	//display
@@ -142,7 +142,7 @@ export let cs = {
 	vrotscene: 0,
 	vrotSun: 0,
 	linkMedia: "",
-	autoCloseMenu: false,
+	autoCloseMenu: true,
 	//comments:"http://",
 	//backgroundColor
 	background: "rgb(60,100,140)",	
@@ -156,25 +156,27 @@ export let cs = {
 	typePolyedre:"Dodecahedron", // par defaut
 	rayonPolyedre:200,
 	conicity:2,
-	paramfacePolyedre:{  // pour initialisation
-		x:0,y:0,z:50,  // sommet du style droit en coord.locales		
-		heuresSolaires: true,
-		heuresLegalesSummerAutums: false,
-		heuresLegalesWinterSpring: false,
-		heuresAntiques: false,
-		heuresBabyloniques: false,
-		heuresItaliques: false,
-		heuresSideralesWS: false,
-		heuresSideralesSA: false,
-		heuresPlanetairesWS: false,
-		heuresPlanetairesSA: false,
-		equinoxeAndSolstices: false,
-		datesArcsDiurnes: [[]], // [[date, dec en rad]]  tableau à deux dimensions
-		devx:-50,devy:50,
-		devFace:""
-	},
 	
-	paramfacesPolyedre:[] // tableau des paramfacePolyedre}
+	polyGx:[],
+	polyGy:[],
+	polyGz:[], // sommet du style droit en coord.locales		
+	polyheuresSolaires: [],
+	polyheuresLegalesSummerAutums: [],
+	polyheuresLegalesWinterSpring: [],
+	polyheuresAntiques: [],
+	polyheuresBabyloniques: [],
+	polyheuresItaliques: [],
+	polyheuresSideralesWS: [],
+	polyheuresSideralesSA: [],
+	polyheuresPlanetairesWS: [],
+	polyheuresPlanetairesSA: [],
+	polyequinoxeAndSolstices: [],
+	polydatesArcsDiurnes: [[]], // [[date, dec en rad]]  tableau à deux dimensions
+	polyDev:[],
+	polyDevx:[],
+	polyDevy:[],
+	polysubDivisions:[],
+	polyDevTextsize:1
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -348,7 +350,7 @@ export function RechercheParAdresse(v) {
 	};
 	// Send a request
 	try {
-		xhttp.open("GET", "https://api.opencagedata.com/geocode/v1/json?key=a110b502b29f4de9a47d95bc3b6c5e98&q=" + v + "&limit=1", false);
+		xhttp.open("GET", "https://api.opencagedata.com/geocode/v1/json?key=a110b502b29f4de9a47d95bc3b6c5e98&q=" + v + "&limit=1", []);
 		xhttp.send();
 
 	} catch (error) {
