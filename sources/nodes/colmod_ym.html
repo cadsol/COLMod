@@ -25,9 +25,7 @@
 			Library 3D: <a href="https://threejs.org" target="_blank" >Three.js</a> <br>
 			Astronomical library: 
 			<a href="https://en.wikipedia.org/wiki/Jean_Meeus" target="_blank" rel="noopener">Jean Meeus & </a>
-					<a href="https://en.wikipedia.org/wiki/Sonia_Keys" target="_blank" rel="noopener">Sonia Keys</a>  <br>
-			Polyhedra database: <a href="https://home.adelphi.edu/~stemkoski" target="_blank" rel="noopener">Lee Stemkoski</a>  <br>
-
+			<a href="https://en.wikipedia.org/wiki/Sonia_Keys" target="_blank" rel="noopener">Sonia Keys</a>  <br>
             <!-- <a href="https://github.com/commenthol/astronomia" target="_blank" rel="noopener">commenthol</a></br>--> 
 			<p>
 				<img src="./imageMoret.jpg" alt="Image" style="max-width:100%;height:auto">
@@ -97,11 +95,11 @@
 			HPSA="Planetary (summer, autumn)",HPWS = "Planetary (winter, spring)";
 
 // -----------------------------------COLVARS--------------------------------------------------------------------------------------------
-		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM} from './colvars.js';
+		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM} from './colvars';
 	//	import {initPol,InitGuiPolyedres,voirSectionPoly,displayFaces,cadranPoly,torePoly} from './ModulePolyedre.js'
 // --------------------------------------------------------------------------------------------------------------------------------------	
 
-		cs.version = "2023-12-05"
+		cs.version = "2023-11-27_YM"
         let dateJour = new Date()
 		//cs.hsol=dateJour.getHours()
 		cs.year=dateJour.getFullYear()
@@ -212,7 +210,7 @@
 		let cadranSolaireGroup, axeMondeGroup, earthGroup;
 
 		let  gnomon,gnomonTore, meshDevise, stylePolaire, sousStylaire,stylePlan,styleBord, BoutStyle,FinStyle,
-		    styleAnalem,styleTorique, filHorizontal, filVertical, pilierH1, pilierH2, pilierH3, pilierH4;
+			styleAnalem, centreAnalem, styleTorique, filHorizontal, filVertical, pilierH1, pilierH2, pilierH3, pilierH4;
 
 		let heuresSolairesGroup, heuresLegalesGroupSA, heuresLegalesGroupWS, heuresAntiquesGroup, arcsDiurnesGroup;
 		let heuresBabyloniquesGroup, heuresItaliquesGroup, heuresSDSAgroup, heuresSDWSgroup,groupAxes;
@@ -824,7 +822,12 @@
 
 		let xd = 0, yd = 0, zd = 1    // Direction Gnomon analemmatique  Modif AJL 
 		function Proj([x, y, z]) {            // Projection sur le cadran avec mise à la dimension R
-			return new Point(cs.Ranalem * (y - z * xd / zd), cs.Ranalem * (-x - z * yd / zd),0);
+			x *= cs.Ranalem;
+			y *= cs.Ranalem;
+			z *= cs.Ranalem;
+			const bc = cs.Canalem? 1: 0;
+			const pr = cs.Canalem && (Math.abs(zd) <= Math.sign(zd)*z)? -0.1: 0;
+			return new Point((y * zd - z * xd) / (zd - bc * z), (-x * zd - z * yd) / (zd - bc * z), pr);
 		}
 
 		function TracerAnalem() {
@@ -842,50 +845,69 @@
 			if (hf >= hd + 24) hf = hd + 24;
 
 			var ob = .4091;		// Obliquité de l'écliptique
-			var prp = 50;			// Rapport des longueurs de l'échelle des dates et des tirets
 			var nsg = 4;			// Nombre de segment par heure
-			var x, y, z;
-			// Ligne horaire
+			var nld = 50;			// Nombre de segment pour la ligne des dates
+			var x, y, z, pj, dc, bl;
 			var pths = [];
+
+			// Ligne horaire -------------------------
+			CSVtext += "Ellipse \n\n"
+			bl = false;
 			for (let hv = hd * nsg; hv <= hf * nsg; hv++) {
 				[x, y] = Rot(1, 0, 15 * hv / nsg);    // Direction du point horaire dans le repère polaire
-				pths.push(Proj(EtoC(x, y, 0)));
+				pj = Proj(EtoC(x, y, 0))
+				if ((pj.z == 0) && (Math.abs(pj.x + cs.xgnomon) <= (cs.largeur / 2)) && (Math.abs(pj.y + cs.ygnomon) <= (cs.hauteur / 2))) {
+					pths.push(pj);
+					bl = true;
+				} else if (bl) {
+					traceAnalem(pths, cs.egnomon, 100);  //+++ Tracé de l'ellipse
+					pths.splice(0, pths.length);		// Vide le tableau
+					bl = false;
+				}
 			}
-			CSVtext+= "Ellipse \n\n"
-			traceAnalem(pths, cs.egnomon, 100);  //+++ Tracé de l'ellipse
-			CSVtext+= "\n\n"
-			// pths.splice(0, pths.length);		// Vide le tableau
-			// [x, y] = Rot(1, 0, 15*(cs.hsol - 0.05));    // Direction du point horaire dans le repère polaire
-			// pths.push(Proj(EtoC(x, y, 0)));
-			// [x, y] = Rot(1, 0, 15*(cs.hsol + 0.05));    // Direction du point horaire dans le repère polaire
-			// pths.push(Proj(EtoC(x, y, 0)));
-			// traceAnalem(pths,3*cs.egnomon,10);  //+++ Trace pour cs.hsol
+			if (bl) traceAnalem(pths, cs.egnomon, 100);  //+++ Tracé de l'ellipse
+			CSVtext += "\n\n"
+
+			// Plots horaires -------------------------
 			for (let hv = hd; hv <= hf; hv++) {
-				pths.splice(0, pths.length);		// Vide le tableau
-				[x, y] = Rot(1, 0, 15 * (hv - 0.05));    // Direction du point horaire dans le repère polaire
-				pths.push(Proj(EtoC(x, y, 0)));
-				[x, y] = Rot(1, 0, 15 * (hv + 0.05));    // Direction du point horaire dans le repère polaire
-				pths.push(Proj(EtoC(x, y, 0)));
-				CSVtext+= "hour: " +hv.toString()+ " H \n"
-				traceAnalem(pths, 3 * cs.egnomon, 10);  //+++ Trace pour cs.hsol
-				[x, y] = Rot(1, 0, 15 * hv)
-				// [x, y]=Proj(EtoC(x, y, 0))
-				EcrireTexte(hv.toString(),
+				[x, y] = Rot(1, 0, 15 * hv) // Direction du point horaire dans le repère polaire
+				pj = Proj(EtoC(x, y, 0))
+				if ((pj.z == 0) && (Math.abs(pj.x + cs.xgnomon) <= (cs.largeur / 2)) && (Math.abs(pj.y + cs.ygnomon) <= (cs.hauteur / 2))) {
+					pths.splice(0, pths.length);		// Vide le tableau
+					[x, y] = Rot(1, 0, 15 * (hv - 0.05));
+					pths.push(Proj(EtoC(x, y, 0)));
+					[x, y] = Rot(1, 0, 15 * (hv + 0.05));
+					pths.push(Proj(EtoC(x, y, 0)));
+					CSVtext += "hour: " +hv.toString()+ " H \n"
+					traceAnalem(pths, 3 * cs.egnomon, 10);  //+++ Trace pour cs.hsol
+					[x, y] = Rot(1, 0, 15 * hv)
+					EcrireTexte(hv.toString(),
 					Proj(EtoC(x, y, 0)).x + cs.xgnomon,
 					Proj(EtoC(x, y, 0)).y + cs.ygnomon,
 					cs.epaisseur / 2,
 					materialAnalem, analemGroup, analemListeMesh)
-
+				}
 			}
-
 			CSVtext+= "\n\n"
+
+			// Ligne des dates -------------------------
 			pths.splice(0, pths.length);		// Vide le tableau
-			// Ligne des dates
-			CSVtext+= "Line for the date \n"
-			pths.push(Proj(EtoC(0, 0, Math.tan(-ob))));
-			pths.push(Proj(EtoC(0, 0, Math.tan(ob))));
-			//dx, dy = (y2 - y1)/prp, (x1 - x2)/prp;
-			traceAnalem(pths, cs.egnomon / 2, 10);  //+++ Tracé de la ligne des dates
+			CSVtext += "Line for the date \n"
+			bl = false;
+			for (let ndc = 0; ndc <= nld; ndc++) {
+				dc = ob * (2 * ndc / nld - 1);
+				pj = Proj(EtoC(0, 0, Math.tan(dc)))
+				if ((Math.abs(pj.x + cs.xgnomon) <= (cs.largeur / 2)) && (Math.abs(pj.y + cs.ygnomon) <= (cs.hauteur / 2))) {
+					pj.z = 0
+					pths.push(pj);
+					bl = true;
+				} else if (bl) {
+					traceAnalem(pths, cs.egnomon / 2, 10);  //+++ Tracé de la ligne des dates
+					pths.splice(0, pths.length);		// Vide le tableau
+					bl = false;
+				}
+			}
+			if (bl) traceAnalem(pths, cs.egnomon / 2, 10);  //+++ Tracé de la ligne des dates
 
 			cadranSolaireGroup.add(analemGroup);
 		}
@@ -958,45 +980,38 @@
 
 
 		function EcrirelesDates() {
-			let pg, xp, yp, j, jde, ae, agauche, js, ms, mm, jj,gradGeo=[],gradMesh=[]
-			//cs.hoursTextSize*=0.5
-			CSVtext+="\n\n"
-			CSVtext+="Date for the style \n\n"
+			let pg, xp, yp, j, jde, ae, js, ms, gradGeo, gradMesh;
+			CSVtext+="\n\n";
+			CSVtext+="Date for the style \n\n";
 			for (let m = 1; m < 13; m++) {
-				// if (typeof (gradGeo[m-1]) !== "undefined") { gradGeo[m-1].geometry.dispose() };
-				// cadranSolaireGroup.remove(gradMesh[m-1]);
-				j = cs.dateAnalem
+				j = cs.dateAnalem;
 				jde = JULIAN.CalendarGregorianToJD(cs.year, m, j);
-				mm = JULIAN.JDToCalendarGregorian(jde).month
-				jj = JULIAN.JDToCalendarGregorian(jde).day
 				ae = apparentEquatorial(jde);
 				pg = Proj(EtoC(0, 0, Math.tan(ae.dec)));
-				xp = pg.x + cs.xgnomon; yp = pg.y + cs.ygnomon
-				gradGeo.push(new THREE.CylinderGeometry())
-				gradMesh.push(new THREE.Mesh(gradGeo[m-1],materialAnalem))
-				cadranSolaireGroup.add(gradMesh[m-1])
-				gradMesh[m-1].position.set(xp,yp,cs.epaisseur/2)
-				gradMesh[m-1].scale.set(cs.egnomon,4*cs.egnomon,cs.egnomon)
-				gradMesh[m-1].rotateZ(Math.PI/2) 
-				//debutGnomon.position.x=xp;	debutGnomon.position.y=yp ; debutGnomon.position.z= (cs.egnomon+cs.epaisseur)/2
-				if ((jde > TS.solJuin) && (jde < TS.solDecembre)) { agauche = true } else { agauche = false }
-				js = jj.toString()
-				ms = mm.toString(); if (m < 10) { ms = '0' + ms }
-				if (agauche) {
-					gradMesh[m-1].position.set(xp-4,yp,cs.epaisseur/2)
-					EcrireTexte(js + "/" + ms + " ", xp, yp,cs.epaisseur / 2, materialAnalem, analemGroup, analemListeMesh, true)
-					ligneSVG(xp - 5, yp, xp, yp)
+				xp = pg.x + cs.xgnomon; yp = pg.y + cs.ygnomon;
+				if ((Math.abs(xp) <= (cs.largeur / 2)) && (Math.abs(yp) <= (cs.hauteur / 2))) {
+					gradGeo = new THREE.CylinderGeometry();
+					gradMesh = new THREE.Mesh(gradGeo, materialAnalem);
+					cadranSolaireGroup.add(gradMesh);
+					gradMesh.position.set(xp,yp,cs.epaisseur/2);
+					gradMesh.scale.set(cs.egnomon,4*cs.egnomon,cs.egnomon);
+					gradMesh.rotateZ(Math.PI/2);
+					js = j.toString();
+					ms = m.toString(); if (m < 10) { ms = '0' + ms };
+					if ((jde > TS.solJuin) && (jde < TS.solDecembre)) {  // à gauche
+						gradMesh.position.set(xp - 4, yp, cs.epaisseur/2);
+						EcrireTexte(js + "/" + ms + " ", xp, yp, cs.epaisseur / 2, materialAnalem, analemGroup, analemListeMesh, true);
+						ligneSVG(xp - 5, yp, xp, yp);
+					} else {
+						gradMesh.position.set(xp + 4, yp, cs.epaisseur/2);
+						EcrireTexte(" " + js + "/" + ms, xp + 7, yp, cs.epaisseur / 2, materialAnalem, analemGroup, analemListeMesh, false);
+						ligneSVG(xp, yp, xp + 4, yp);
+					}
+					ligneCSV(js + "/" + ms + " : ", xp, yp);
+					analemListeMesh.push(gradMesh);
+					analemGroup.add(gradMesh);
 				}
-				else {
-					gradMesh[m-1].position.set(xp+4,yp,cs.epaisseur/2)
-					EcrireTexte(js + "/" + ms, xp + 7, yp,cs.epaisseur / 2, materialAnalem, analemGroup, analemListeMesh, false)
-					ligneSVG(xp, yp, xp + 4, yp)
-				}
-				ligneCSV(js + "/" + ms + " : ",xp,yp)
-				analemListeMesh.push(gradMesh[m-1]);
-				analemGroup.add(gradMesh[m-1]);
 			}
-			//cs.hoursTextSize*=2
 		}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1029,6 +1044,7 @@
 			if (typeof (stylePolaire) !== "undefined") { stylePolaire.geometry.dispose() };
 			if (typeof (sousStylaire) !== "undefined") { stylePolaire.geometry.dispose() };
 			if (typeof (styleAnalem) !== "undefined") { styleAnalem.geometry.dispose() };
+			if (typeof (centreAnalem) !== "undefined") { centreAnalem.geometry.dispose() };
 			if (typeof (stylePlan) !== "undefined") { stylePlan.geometry.dispose() };
 			if (typeof (styleBord) !== "undefined") { styleBord.geometry.dispose() };
 			cadranSolaireGroup.remove(FinStyle);
@@ -1036,6 +1052,7 @@
 			cadranSolaireGroup.remove(stylePolaire);
 			cadranSolaireGroup.remove(sousStylaire);
 			cadranSolaireGroup.remove(styleAnalem);
+			cadranSolaireGroup.remove(centreAnalem);
 			cadranSolaireGroup.remove(stylePlan);
 			cadranSolaireGroup.remove(styleBord);
 			if (typeof (filHorizontal) !== "undefined") { filHorizontal.geometry.dispose() };
@@ -1224,20 +1241,28 @@
 			}
 
 			if (cs.typeCadran == ANL) {
-				xd = zd * Math.tan(base.toRad(cs.xdirect))
-				yd = zd * Math.tan(base.toRad(cs.ydirect))
+				zd = cs.zdirect;
+				xd = zd * Math.tan(base.toRad(cs.xdirect));
+				yd = zd * Math.tan(base.toRad(cs.ydirect));
 				const pg = Proj(EtoC(0, 0, Math.tan(TS.decSuns[cs.dayofYear - 1])));
 				const xp = pg.x + cs.xgnomon, yp = pg.y + cs.ygnomon, zp = cs.epaisseur / 2;
-				// const v1 = new THREE.Vector3(xp, yp, zp);
-				// const k = cs.Hanalem/Math.sqrt(cs.xdirect*cs.xdirect + cs.ydirect*cs.ydirect + cs.zdirect*cs.zdirect);
-				// const v2 = new THREE.Vector3(xp + k*cs.xdirect, yp + k*cs.ydirect, zp + k*cs.zdirect);
 				const v1 = new THREE.Vector3(xp, yp, zp);
-				const k = cs.Hanalem / Math.sqrt(xd * xd + yd * yd + zd * zd);
-				const v2 = new THREE.Vector3(xp + k * xd, yp + k * yd, zp + k * zd);
-				const tubeGeometrySP = new THREE.TubeGeometry(new THREE.LineCurve3(v1, v2), 16, cs.egnomon, 32);
-				styleAnalem = new THREE.Mesh(tubeGeometrySP, materialGnomon);
+
+				const bc = (cs.Canalem)? 1: 0;
+				const k = Math.sign(zd) * cs.Hanalem / Math.sqrt((xd - bc * pg.x) ** 2 + (yd - bc * pg.y) ** 2 + zd ** 2);
+				const v2 = new THREE.Vector3(xp + k * (xd - bc * pg.x), yp + k * (yd - bc * pg.y), zp + k * zd);
+				const tubeGeometry = new THREE.TubeGeometry(new THREE.LineCurve3(v1, v2), 16, cs.egnomon, 32);
+				styleAnalem = new THREE.Mesh(tubeGeometry, materialGnomon);
 				styleAnalem.castShadow = true;
 				cadranSolaireGroup.add(styleAnalem);
+				if (cs.Canalem) {
+					//const centreGeometry = new THREE.IcosahedronGeometry(3 * cs.egnomon, 1);
+					const centreGeometry = new THREE.SphereGeometry(3 * cs.egnomon, 32, 16);
+					centreAnalem = new THREE.Mesh(centreGeometry, materialGnomon);
+					centreAnalem.castShadow = true;
+					centreAnalem.position.set(xd + cs.xgnomon, yd + cs.ygnomon, zd + cs.epaisseur / 2);
+					cadranSolaireGroup.add(centreAnalem);
+				}
 				//EcrirelesDates()
 				//if (ligneDate.length>0) {EcrireTexte(ligneDate,xp,yp,materialAnalem,analemGroup,analemListeMesh)}
 			}
@@ -1869,11 +1894,11 @@
 					try { csl = JSON.parse(reader.result) }
 					catch (e) { console.error("Parsing error:", e) }
 					//console.log(JSON.stringify(csl,null,2));
-					for (let k in csl) {cs[k] = csl[k]}   //  ;console.log(k,cs[k],csl[k])
+					for (var k in csl) { cs[k] = csl[k] }
 					Info(cs.nameFile)
 					TS = TableSol(cs.year);
 					NouveauCadran=false
-				//	console.log(JSON.stringify(cs,null,2)) 
+					
 					run();
 				}, false);
 				
@@ -2137,37 +2162,35 @@
 				}
 
 				function TracerCadranPolyedrique() {
-					//cs.heuresSolaires = false
+					cs.heuresSolaires=false
 					// effacelisteMesh(heuresSolairesListeMesh,cadranSolaireGroup)
-					cs.axesXYZ = false
+					cs.axesXYZ=false
 					
-					if (NouveauCadran == true) {
+				if (NouveauCadran == true) {
 						polyhedre = POLYHEDRA.Dodecahedron
-					}
-					if (NouveauCadran == false) {
-						for (var arg in POLYHEDRA) {
+						initFacesPolyedre()
+						//InitGuiPolyedres()
+						initPol(gui)	
+						voirSectionPoly(true)
+						return
+					    }
 							
-							if (POLYHEDRA[arg].name == cs.typePolyedre) {
+				for (var arg in POLYHEDRA) {
+							//console.log(POLYHEDRA[arg].name,cs.typePolyedre)
+							if (POLYHEDRA[arg].name==cs.typePolyedre) {
 								const a = arg
-								polyhedre = POLYHEDRA[a]
-								//console.log(POLYHEDRA[a].name)
-								continue
-							}
-						}
-						guiSectionPoly.title("POLYEDRA : " + polyhedre.name)
-						cs.typePolyedre = polyhedre.name
-						nbFaces = polyhedre.face.length
-					}
-					
-					initFacesPolyedre()
-					//console.log(cs)
-					voirSectionPoly(true)
-					initPol(gui)
-					
-
-
-				}
+				                polyhedre = POLYHEDRA[a]
+								continue}
+							 }
+				guiSectionPoly.title("POLYEDRA : " + polyhedre.name)
+				cs.typePolyedre = polyhedre.name
+				nbFaces = polyhedre.face.length
 				
+				initFacesPolyedre()
+				initPol(gui)
+				voirSectionPoly(true)
+				}
+
 				gzfxy.disable()
 				Info("")
 				cadranSolaireGroup.clear()
@@ -2236,7 +2259,7 @@
 				if (cs.typeForme=="parametric"){gzfxy.enable()}else{gzfxy.disable()}
 				zPosController.disable()
 				ctlRot.disable()
-				eulerCsGroup()
+				//eulerCsGroup()
 				PlacerLaTerre()
 				PlacerLeSoleil()
 				groupAxes.add(axeX)
@@ -2302,7 +2325,7 @@
 					folderGnomonClassic.hide();
 					folderHours.hide();
 					folderArcs.hide();
-					//cadranSolaireGroup.clear()
+					cadranSolaireGroup.clear
 					/*
 					cadranSolaireGroup.remove(heuresSolairesGroup);
 					cadranSolaireGroup.remove(heuresLegalesGroupSA);
@@ -2315,8 +2338,7 @@
 					cadranSolaireGroup.remove(arcsDiurnesGroup);*/
 					gnomon.visible = false;
 					ctlIncli.enable();
-					//cs.incli=0;
-					eulerCsGroup();
+					//cs.incli=0;eulerCsGroup();
 					folderAnalem.show();
 					TracerHeuresEtArcs();
 					EcrireDevise(cs.devise, cs.positionDevisex, cs.positionDevisey);
@@ -2461,7 +2483,6 @@
 					PlacerLeSoleil(); TracerHeuresEtArcs()
 					if((cs.typeCadran==RTS)&&(cs.typeForme=="equatorial")){TracerCadranRTS("equatorial")}
 					if((cs.typeCadran==RTS)&&(cs.typeForme=="scaphe")){TracerCadranRTS("scaphe")}
-					if (RTSpolyhedre()){tracerTouteslesfaces()}
 				})
 				.listen();
 			folderGeoSundial.add(cs, "longi", -180, 180, 0.001)
@@ -2473,7 +2494,6 @@
 				.onFinishChange(() => {
 					PlacerLaTerre();//eulerEarthGroup():
 					TracerHeuresEtArcs()
-					if (RTSpolyhedre()){tracerTouteslesfaces()}
 				})
 				.listen();
 			
@@ -2598,7 +2618,11 @@
 
 			//// ANALEMMATIQUE  +++
 
-			const folderAnalem = folderGnomon.addFolder("Analematic gnomon");
+			const folderAnalem = folderGnomon.addFolder(" gnomon");
+			folderAnalem.add(cs, "Canalem")
+				.name("Central proj.")
+				.onChange(function () { TracerStyle() })
+				.onFinishChange(function () { TracerHeuresEtArcs() })
 			folderAnalem.add(cs, "xdirect", -89, 89, 0.1)
 				.name("← → °")
 				.onChange(function () { TracerStyle() })
@@ -2607,10 +2631,10 @@
 				.name("↑ ↓ °")
 				.onChange(function () { TracerStyle() })
 				.onFinishChange(function () { TracerHeuresEtArcs() });
-			//folderAnalem.add(cs, "zdirect", -500, 500, 0.1)
-			//	.name("Alt")
-			//	.onChange(function () {TracerStyle()})
-			//	.onFinishChange(function () {TracerHeuresEtArcs()});
+			folderAnalem.add(cs, "zdirect", -500, 500, 0.1)
+				.name("Alt.")
+				.onChange(function () {TracerStyle()})
+				.onFinishChange(function () {TracerHeuresEtArcs()});
 			folderAnalem.add(cs, "Hanalem", 1, 500, 0.1)
 				.name("Gnomon length")
 				.onChange(function () { TracerStyle() })
@@ -3182,16 +3206,13 @@
 			const folderFiles = gui.addFolder(sp + 'Export');
 			const ButtonDownload = {
 				functionDownload() {
-					effacelisteMesh(labelAxesListeMesh, groupAxes)
+					effacelisteMesh(labelAxesListeMesh,groupAxes)
 					let e = cs.export
-					if (e == "Sundial(.JSON)") {
-						if (RTSpolyhedre()) { rapellerFace(0) };   ////  !!!!!! important
-						saveString(JSON.stringify(cs, null, 2), cs.nameFile + '.json')
-					}
+					if (e == "Sundial(.JSON)") { saveString(JSON.stringify(cs, null, 2), cs.nameFile + '.json') };
 					if (e == "Spreadsheet(.CSV)") {
 						initCSVtext(); TracerHeuresEtArcs();
 						saveString(CSVtext, cs.nameFile + '.csv')
-					}
+					};
 					if (e == "Ephemeris(.CSV)") { Ephemerid(cs.year); saveString(CSVephemerid, 'Ephemerid' + cs.year + '.csv') };
 					if (e == "3D(.PLY)") { saveString(GenererPLY(), cs.nameFile + ".PLY") };
 					if (e == "3D(.OBJ)") { saveString(GenererOBJ(), cs.nameFile + ".OBJ") };
@@ -3199,14 +3220,11 @@
 					if (e == "Scal.Vect.Graph.(.SVG)") {
 						construireFichierSVG()
 						saveString(SVGtext, cs.nameFile + '.svg')
-					};
-					if (e == "Params (.HTML)") { saveString(HTLM(cs), cs.nameFile + '.html') }
-					if (RTSpolyhedre()) {
-						Poly2D = false; TracerHeuresEtArcs()
-						EcrireXYZ()
-					}
-				}
-			}
+					    };
+					if (e =="Params (.HTML)"){saveString(HTLM(cs), cs.nameFile + '.html')}
+					if (RTSpolyhedre()) { Poly2D = false; TracerHeuresEtArcs() 
+					EcrireXYZ()}
+			}}
 
 
 //			
@@ -3318,7 +3336,7 @@
 
 			orienterAxedumonde()
 			PlacerLaTerre()
-			eulerCsGroup();
+			//eulerCsGroup();
 			//eulerEarthGroup() 
 
 			PlacerLeSoleil();
@@ -3354,7 +3372,7 @@
 			materialCS.map = choixTextures[cs.nameTexture]
 			//console.log( cs.nameTexture,choixTextures[cs.nameTexture])
 			materialCS.needsUpdate = true
-			//if (cs.typeCadran == RTS) { TracerCadranRTS(cs.typeForme) }
+			if (cs.typeCadran == RTS) { TracerCadranRTS(cs.typeForme) }
 			EcrireDevise(cs.devise, cs.positionDevisex, cs.positionDevisey)
 			if (cs.typedataURL == '.obj') {
 				objloader.load(cs.dataURL, function (Lucymesh) {
@@ -3370,7 +3388,7 @@
 					TracerHeuresEtArcs()
 				})
 			}
-			//TracerHeuresEtArcs()
+			TracerHeuresEtArcs()
 			
 			EcrireXYZ()
 	
@@ -3679,7 +3697,7 @@
 		polyhedre,styleToriquePoly,geoTorePoly,gnomonPoly,Poly2D=false
 	let meshFacesGroup = new THREE.Group()
 	let meshFaces = [], meshGnomons = [], normalsFaces = [] ,hauteursGnomons=[],centersFaces=[]
-	let nfaceActive=0,aFace=0,nFaceMax=-1,nFaceBase=-1
+	let nfaceActive=0,aFace=0,nFaceMax=0,nFaceBase=0
 
 	let
 			polyheuresSolairesListeMesh = [],
@@ -3719,11 +3737,10 @@
 		let  geometryGnomonPoly 
 		
 		if (gnomonPoly!=undefined){gnomonPoly.geometry.dispose()}
-	
 		if (h>0){geometryGnomonPoly = new THREE.CylinderGeometry(cs.egnomon/cs.conicity, cs.egnomon*cs.conicity, h, 16, 16)
 			     gnomonPoly = new THREE.Mesh(geometryGnomonPoly, materialGnomon)} 
-		    else{ 	 gnomonPoly = new THREE.Mesh()}
-		
+		    else{ 
+				 gnomonPoly = new THREE.Mesh()}
 
 
 		if (styleToriquePoly!=undefined){styleToriquePoly.geometry.dispose()}
@@ -3815,15 +3832,13 @@
 			h=centerFace.distanceTo(a) / 3 //* (cs.zgnomon/100)
 			dmax.push(h)
 			//h=cs.zgnomon
-			
 			if(h>hmax){hmax=h;nFaceMax=f}  //recherche d'une "grande" face
-			if(NouveauCadran){
-				cs.positionDevisex=-h;cs.positionDevisey=h;
-				cs.polyGz[f]=h 
-				NouveauCadran=false
-				}else{h= cs.polyGz[f]}			
-			if(f==nFaceBase){h=0;cs.polyGz[f]=0}
+			cs.positionDevisex=-h;cs.positionDevisey=h;
+
+			//if (f==nFace){h *= cs.polyGz[nFace]/50}
+			h *= cs.polyGz[f]/50
 			
+			if (f==nFaceBase){h=0}
 			TracerGnomonPoly(h)
 			meshFace.add(gnomonPoly)
 			
@@ -3928,7 +3943,10 @@
 		}
 	}
 
-	function effacerPolyListes(f){
+	function effacerListe(f){
+		// cadranSolaireGroup.clear()
+		// initFacesPolyedre()
+		// for(let f=0;f<nbFaces;f++){
 			effacelisteMesh(polyheuresSolairesListeMesh[f],polyheuresSolairesGroup[f])
 			effacelisteMesh(polyheuresLegalesListeMeshSA[f],polyheuresLegalesGroupSA[f])
 			effacelisteMesh(polyheuresLegalesListeMeshWS[f],polyheuresLegalesGroupWS[f])
@@ -3941,91 +3959,48 @@
 			effacelisteMesh(polyheuresHPSAListeMesh[f],polyheuresHPSAgroup[f])
 			cs.polyequinoxeAndSolstices[f]=false
 			effacelisteMesh(polyarcsDiurnesListeMesh[f],polyarcsDiurnesGroup[f])
-	}
-
-	function effacerListes(){
+			// rapellerFace(f)
+			// TracerHeuresEtArcs()
+		// }
 		
-			heuresSolairesListeMesh=[]
-			heuresLegalesListeMeshSA=[]
-			heuresLegalesListeMeshWS=[]
-			heuresAntiquesListeMesh=[]
-			heuresBabyloniquesListeMesh=[]
-			heuresItaliquesListeMesh=[]
-			heuresSDSAListeMesh=[]
-			heuresSDWSListeMesh=[]
-			heuresHPWSListeMesh=[]
-			heuresHPSAListeMesh=[]
-			cs.equinoxeAndSolstices=false
-			arcsDiurnesListeMesh=[]
 	}
 
-	function effacerTouteslesfaces() {
-			effacerTouteslesHeures()
-			//effacerListes()
-			
-			for (let f = 0; f < nbFaces; f++) {
-				effacerPolyListes(f)
-				// nfaceActive = f
-				cadran = meshFaces[nfaceActive].clone()
-				// //displayFaces(polyhedre)
-				
-				cs.datesArcsDiurnes = [[]]
-				cs.equinoxeAndSolstices = false
-			    TracerHeuresEtArcs()
-			}		
+	function effacerTouteslesfaces(){
+		for(let f=0;f<nbFaces;f++){
+			effacerListe(f)
+			memoriserFace(f)
+			TracerHeuresEtArcs()
+		 }
+		
 	}
-
-	function effacerTouteslesHeures() {
-			cs.heuresSolaires = false
-			cs.heuresLegalesSummerAutums = false
-			cs.heuresLegalesWinterSpring = false
-			cs.heuresAntiques = false
-			cs.heuresItaliques = false
-			cs.heuresSideralesWS = false
-			cs.heuresSideralesSA = false
-			cs.heuresPlanetairesWS = false
-			cs.heuresPlanetairesSA = false
-			cs.datesArcsDiurnes = [[]]
-			cs.equinoxeAndSolstices=true
-		}
-	
-	function TouteslesHeuresTrue() {
-			cs.heuresSolaires = true
-			cs.heuresLegalesSummerAutums = true
-			cs.heuresLegalesWinterSpring = true
-			cs.heuresAntiques = true
-			cs.heuresItaliques = true
-			cs.heuresBabyloniques=true
-			cs.heuresSideralesWS = true
-			cs.heuresSideralesSA = true
-			cs.heuresPlanetairesWS = true
-			cs.heuresPlanetairesSA = true
-			//cs.datesArcsDiurnes = [[]]
-			//cs.equinoxeAndSolstices=true
-		}
 
 	function tracerTouteslesfaces() {
-			//effacerTouteslesfaces()	
-			//TouteslesHeuresTrue()
-		
+		    // memoriserTouteslesfaces()
+			// for (let f = 0; f < nbFaces; f++) {
+			// 	nfaceActive = f		
+				
+			// 	cadran = meshFaces[nfaceActive].clone()
+			// 	rapellerFace(nfaceActive)	
+			// 	//displayFaces(polyhedre)
+					
+			// 	TracerHeuresEtArcs()
+			// 	Poly2D = false
+			// 	//EcrireDevise(cs.polyDev[nfaceActive], cs.polyDevx[nfaceActive], cs.polyDevy[nfaceActive])
+			// }
+			// memoriserTouteslesfaces()
 			for (let f = 0; f < nbFaces; f++) {
-				//effacerPolyListes(f)
-				//effacerListes()
-			    nfaceActive=f					
-				cadran = meshFaces[nfaceActive].clone()	
-				rapellerFace(nfaceActive)			
-				displayFaces(polyhedre)		
+				effacerListe(f)
+			    nfaceActive=f	
+				rapellerFace(nfaceActive)
+				cadran = meshFaces[nfaceActive].clone()				
+				displayFaces(polyhedre)
 				TracerHeuresEtArcs()
+				//memoriserFace(nfaceActive)
 			}
-			//effacerTouteslesHeures()
 			
+		
  		}
-
-
 	function rapellerFace(f){
-
-		effacerTouteslesHeures()
-
 		cs.heuresSolaires=cs.polyheuresSolaires[f]
 		heuresSolairesListeMesh=polyheuresSolairesListeMesh[f]
 		heuresSolairesGroup=polyheuresSolairesGroup[f]
@@ -4087,8 +4062,7 @@
 				cs.decli=0;cs.incli=90;cs.rot=0	
 				PlacerStyleToriquePoly(nfaceActive,hauteursGnomons[nfaceActive])
 				displayFaces(polyhedre)			
-				faceSurBase(nfaceActive)
-				tracerTouteslesfaces() 	
+				faceSurBase(nfaceActive)	
 				SudSundial.show()		
 			 },
 			rotationSud(){
@@ -4098,12 +4072,10 @@
 				cs.decli=vNorm.angleTo(vSud)*180/Math.PI
 				if(normalsFaces[nfaceActive][0]>0){cs.decli=-cs.decli}			
 				displayFaces(polyhedre)	
-				//TracerHeuresEtArcs() 
-				tracerTouteslesfaces() 	
-				//EcrireDevise(cs.devise, cs.positionDevisex, cs.positionDevisey)	
+				TracerHeuresEtArcs() 
+				EcrireDevise(cs.devise, cs.positionDevisex, cs.positionDevisey)	
 				//PolyTracerHeuresEtArcs() 
 				SudSundial.hide()}
-				
 				}
 			}
 
@@ -4196,17 +4168,13 @@
 				cs.typePolyedre = polyhedre.name
 				nbFaces = polyhedre.face.length
 				//effacerTouteslesfaces();initPol(gui);displayFaces(polyhedre)
-				NouveauCadran=true
 				initFacesPolyedre()
 				nfaceActive = 0
 				guichoixFace.max(nbFaces)
 				guichoixFace.updateDisplay()		
 				cs.decli=0;cs.incli=90;cs.rot=0	
-				//initPol(gui)
-				//effacerTouteslesfaces()
-				cadranSolaireGroup.clear()
-				displayFaces(polyhedre)			
-				
+				displayFaces(polyhedre)
+				TracerHeuresEtArcs()
 				PlacerStyleToriquePoly(nfaceActive,hauteursGnomons[nfaceActive])
 				faceSurBase(nFaceMax)
 				SudSundial.show()	
@@ -4218,11 +4186,7 @@
 
 //rayon
 		guiSectionPoly.add(cs,"rayonPolyedre",50,1000,1).name("radius polyedra")
-		  .onFinishChange(function(v){ 
-			//effacerTouteslesfaces()
-		    displayFaces(polyhedre)
-			tracerTouteslesfaces()
-		})
+		  .onFinishChange(function(v){ effacerTouteslesfaces();displayFaces(polyhedre);tracerTouteslesfaces()})
 
 
 
@@ -4249,10 +4213,9 @@
 				cs.decli=0
 				cs.incli=eul.x*180/Math.PI+90
 				cs.rot  =eul.z*180/Math.PI
-				nFaceBase=n
 				displayFaces(polyhedre)
 				tracerTouteslesfaces() 
-				
+				nFaceBase=n
 	}
 
 
@@ -4260,64 +4223,68 @@
 		if ((cs.typeCadran == RTS)&&(cs.typeForme=="polyedric")){return true}else{return false}
 	}
 
-	function initFacesPolyedre() {
-			if (NouveauCadran) {
-				cs.polyDev = []
-				cs.polyGx = []
-				cs.polyGy = []
-				cs.polyGz = [] // sommet du style droit en coord.locales		
-				cs.polyheuresSolaires = []
-				cs.polyheuresLegalesSummerAutums = []
-				cs.polyheuresLegalesWinterSpring = []
-				cs.polyheuresAntiques = []
-				cs.polyheuresBabyloniques = []
-				cs.polyheuresItaliques = []
-				cs.polyheuresSideralesWS = []
-				cs.polyheuresSideralesSA = []
-				cs.polyheuresPlanetairesWS = []
-				cs.polyheuresPlanetairesSA = []
-				cs.polyequinoxeAndSolstices = []
-				cs.polydatesArcsDiurnes = [[]] // [[date, dec en rad]]  tableau à deux dimensions
-				cs.polyDevx = []
-				cs.polyDevy = []
-				cs.polysubDivisions = []
+	function initFacesPolyedre(){
+		if(NouveauCadran){
+			cs.polyDev = []
+			cs.polyGx = []
+			cs.polyGy = []
+			cs.polyGz = [] // sommet du style droit en coord.locales		
+			cs.polyheuresSolaires = []
+			cs.polyheuresLegalesSummerAutums = []
+			cs.polyheuresLegalesWinterSpring = []
+			cs.polyheuresAntiques = []
+			cs.polyheuresBabyloniques = []
+			cs.polyheuresItaliques = []
+			cs.polyheuresSideralesWS = []
+			cs.polyheuresSideralesSA = []
+			cs.polyheuresPlanetairesWS = []
+			cs.polyheuresPlanetairesSA = []
+			cs.polyequinoxeAndSolstices = []
+			cs.polydatesArcsDiurnes = [[]] // [[date, dec en rad]]  tableau à deux dimensions
+			cs.polyDevx = []
+			cs.polyDevy = []
+			cs.polysubDivisions = []
 
-				for (let f = 0; f < nbFaces; f++) {
-					let d = "facet " + (f + 1).toString()
-					cs.polyDev.push(d)
-					cs.polyDevx.push(-10)
-					cs.polyDevy.push(10)
-					cs.devise = ""
-					cs.polydatesArcsDiurnes.push([]) // [[date, dec en rad]]  tableau à deux dimensions}
-					cs.polyGx.push(0)
-					cs.polyGy.push(0)
-					cs.polyGz.push(50) // sommet du style droit en coord.locales		
-					cs.polyheuresSolaires.push(false)
-					cs.polyheuresLegalesSummerAutums.push(false)
-					cs.polyheuresLegalesWinterSpring.push(false)
-					cs.polyheuresAntiques.push(false)
-					cs.polyheuresBabyloniques.push(false)
-					cs.polyheuresItaliques.push(false)
-					cs.polyheuresSideralesWS.push(false)
-					cs.polyheuresSideralesSA.push(false)
-					cs.polyheuresPlanetairesWS.push(false)
-					cs.polyheuresPlanetairesSA.push(false)
-					cs.polyequinoxeAndSolstices.push(false)
-					cs.polysubDivisions.push(1)
-				}
-			}//nouveau cadran
+			// for (let f = 0; f < nbFaces; f++) {
+			// 	effacelisteMesh(polyarcsDiurnesListeMesh[f],polyarcsDiurnesGroup[f])
+			// }
 
-			heuresSolairesListeMesh = []
-			heuresLegalesListeMeshSA = []
-			heuresLegalesListeMeshWS = []
-			heuresAntiquesListeMesh = []
-			heuresBabyloniquesListeMesh = []
-			heuresItaliquesListeMesh = []
-			heuresSDSAListeMesh = []
-			heuresSDWSListeMesh = []
-			heuresHPSAListeMesh = []
-			heuresHPWSListeMesh = []
-			arcsDiurnesListeMesh = []
+			for (let f = 0; f < nbFaces; f++) {
+				let d = "facet " + (f + 1).toString()
+				cs.polyDev.push(d)
+				cs.polyDevx.push(-10)
+				cs.polyDevy.push(10)
+				cs.devise=""
+
+				cs.polydatesArcsDiurnes.push([[]]) // [[date, dec en rad]]  tableau à deux dimensions}
+				cs.polyGx.push(0)
+				cs.polyGy.push(0)
+				cs.polyGz.push(50) // sommet du style droit en coord.locales		
+				cs.polyheuresSolaires.push(false)
+				cs.polyheuresLegalesSummerAutums.push(false)
+				cs.polyheuresLegalesWinterSpring.push(false)
+				cs.polyheuresAntiques.push(false)
+				cs.polyheuresBabyloniques.push(false)
+				cs.polyheuresItaliques.push(false)
+				cs.polyheuresSideralesWS.push(false)
+				cs.polyheuresSideralesSA.push(false)
+				cs.polyheuresPlanetairesWS.push(false)
+				cs.polyheuresPlanetairesSA.push(false)
+				cs.polyequinoxeAndSolstices.push(false)
+				cs.polysubDivisions.push(1)
+			}
+		}
+			// heuresSolairesListeMesh = []
+			// heuresLegalesListeMeshSA = []
+			// heuresLegalesListeMeshWS = []
+			// heuresAntiquesListeMesh = []
+			// heuresBabyloniquesListeMesh = []
+			// heuresItaliquesListeMesh = []
+			// heuresSDSAListeMesh = []
+			// heuresSDWSListeMesh = []
+			// heuresHPSAListeMesh = []
+			// heuresHPWSListeMesh = []
+			// arcsDiurnesListeMesh = []
 
 			polyheuresSolairesListeMesh = []
 			polyheuresLegalesListeMeshSA = []
@@ -4344,7 +4311,7 @@
 				polyheuresHPWSListeMesh.push([])
 				polyarcsDiurnesListeMesh.push([])
 			}
-
+			
 			for (let f = 0; f < nbFaces; f++) {
 				polyheuresSolairesGroup.push(new THREE.Group())
 				polyheuresLegalesGroupSA.push(new THREE.Group())
@@ -4358,62 +4325,48 @@
 				polyheuresHPWSgroup.push(new THREE.Group())
 				polyarcsDiurnesGroup.push(new THREE.Group())
 			}
-			cs.heuresSolaires = false
-			cs.heuresLegalesSummerAutums = false
-			cs.heuresLegalesWinterSpring = false
-			cs.heuresAntiques = false
-			cs.heuresBabyloniques = false
-			cs.heuresItaliques = false
-			cs.heuresSideralesWS = false
-			cs.heuresSideralesSA = false
-			cs.heuresPlanetairesWS = false
-			cs.heuresPlanetairesSA = false
+			cs.heuresSolaires=false
+			cs.heuresLegalesSummerAutums= false
+			cs.heuresLegalesWinterSpring= false
+			cs.heuresAntiques= false
+			cs.heuresBabyloniques= false
+			cs.heuresItaliques=false
+			cs.heuresSideralesWS=false
+			cs.heuresSideralesSA= false
+			cs.heuresPlanetairesWS= false
+			cs.heuresPlanetairesSA= false
 		}
 
 
 	function initPol(gui) {
 		//polyhedre = POLYHEDRA.Rhombicubocahedron
 		//InitGuiPolyedres(gui)
-		//console.log(JSON.stringify(cs,null,2))
 		nbFaces = polyhedre.face.length
-		guichoixFace.max(nbFaces)
-		guichoixFace.updateDisplay()
-		cadranSolaireGroup.add(groupAxes)	
+		cs.xgnomon=0;cs.ygnomon=0
 		
 		Rpol = cs.rayonPolyedre
-		cs.xgnomon=0;cs.ygnomon=0
 		cs.largeur=Rpol*3
 		cs.hauteur=cs.largeur
-		nfaceActive=0
 		if (NouveauCadran){cs.decli=0;cs.incli=90;cs.rot=0;
 			displayFaces(polyhedre)	
 			faceSurBase(nFaceMax)
 			}
-		effacerTouteslesHeures()
-		//nfaceActive = 0	
+		nfaceActive = 0	
 		displayFaces(polyhedre)	
-		//TracerHeuresEtArcs()
-			
+		TracerHeuresEtArcs()
+		guichoixFace.max(nbFaces)
+		guichoixFace.updateDisplay()	
 		//initFacesPolyedre()
 		
-		
+		cadranSolaireGroup.add(groupAxes)	
 		//cs.heuresSolaires=false
 		
 		//rapellerFace(nfaceActive)
 		//
 
 		//
-		//memoriserTouteslesfaces()
-		
-		tracerTouteslesfaces()	
-		nfaceActive=0
-		cadran = meshFaces[nfaceActive].clone()				
-		PlacerStyleToriquePoly(nfaceActive, hauteursGnomons[nfaceActive])	
-		cadran = meshFaces[nfaceActive].clone()	
-				rapellerFace(nfaceActive)			
-				displayFaces(polyhedre)		
-				TracerHeuresEtArcs()
-		//console.log(cs)
+		console.log(cs)
+		tracerTouteslesfaces()
 	}
 
 </script>

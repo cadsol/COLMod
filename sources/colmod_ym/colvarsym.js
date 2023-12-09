@@ -44,13 +44,13 @@ export let cs = {
 	hgnomonBord:0,
 	///++++
 	xdirect: 0,			// Direction en ° /centre de projection cadran analemmatique, positif à droite du cadran
-	ydirect: 0,			// Directionen ° /centre de projection cadran analemmatique, positif en haut du cadran
-	zdirect:150,			// Direction/centre de projection cadran analemmatique, positif au dessus du cadran
+	ydirect: 0,			// Direction en ° /centre de projection cadran analemmatique, positif en haut du cadran
+	zdirect:120,			// hauteur du centre de projection cadran analemmatique, positif au dessus du cadran
 	Hanalem: 200,			// Hauteur du gnomon pour cadran analemmatique
 	Ranalem: 200,		// Rayon du cercle équatorial pour cadran analemmatique
 	//DatesAlalem: [],     // dates sur l'axe des dates
 	colorAnalem: "rgb(100,10,100)",
-	Canalem: false,	// Cadran analemmatique à projection centale   
+	Canalem: false,	// Cadran analemmatique à projection centale   Non utilisé
 	textSizeANL: 1,
 	dateAnalem: 21,
 	///++++
@@ -463,6 +463,7 @@ export function eclair() {
 	if (amn > amx) amx += 2 * Math.PI;
 	return [amn, a1, a2, amx];
 }
+
 
 
 

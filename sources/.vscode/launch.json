@@ -4,33 +4,20 @@
     // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-      
+        
         {
-            "name": "Launch Edge AJL",
+            "type": "chrome",
             "request": "launch",
-            "type": "msedge",
+            "name": "Launch colmod.html Chrome against localhost",
             "url": "http://192.168.1.14/CadsolOnLine/sources/colmod.html",
             "webRoot": "${workspaceFolder}"
         },
         {
-            "name": "Launch Edge YM",
+            "type": "chrome",
             "request": "launch",
-            "type": "msedge",
+            "name": "Launch colmod_ym.html Chrome against localhost",
             "url": "http://192.168.1.14/CadsolOnLine/sources/colmod_ym.html",
             "webRoot": "${workspaceFolder}"
-        },
-        {
-            "type": "chrome",
-            "request": "launch",
-            "name": "Open colmod.html",
-            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod.html"
-           
-        },
-        {
-            "type": "chrome",
-            "request": "launch",
-            "name": "Open colmodPub.html",
-            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod2023-09-08.html"
         }
     ]
 }

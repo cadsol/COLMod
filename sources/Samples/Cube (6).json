@@ -1,0 +1,333 @@
+{
+  "version": "2023-12-05",
+  "hsol": 10.68,
+  "dayofYear": 105,
+  "year": 2023,
+  "typeCadran": "Ray tracing sundial",
+  "typeForme": "polyedric",
+  "largeur": 600,
+  "hauteur": 600,
+  "epaisseur": 30,
+  "decli": 0,
+  "incli": 54.735601804413506,
+  "rot": -89.99998651513175,
+  "zfxy": "sin(25*sqrt(x*x+y*y))",
+  "hgnomon": 50,
+  "egnomon": 1,
+  "xgnomon": 0,
+  "ygnomon": 0,
+  "zgnomon": 39.9,
+  "vgnomon": true,
+  "vstyle": true,
+  "vsousstyle": true,
+  "angleStyleSousstylaire": 11.135601804413502,
+  "xPole": 0,
+  "yPole": 254.0165545495229,
+  "hgnomonBord": 0,
+  "xdirect": 0,
+  "ydirect": 0,
+  "Hanalem": 200,
+  "Ranalem": 200,
+  "colorAnalem": "rgb(100,10,100)",
+  "Canalem": false,
+  "textSizeANL": 1,
+  "dateAnalem": 21,
+  "hfilHorizontal": 30,
+  "hfilVertical": 50,
+  "anglefilHorizontal": 0,
+  "anglefilVertical": 90,
+  "hA1": 30,
+  "xA1": -300,
+  "yA1": 100,
+  "hA2": 30,
+  "xA2": 300,
+  "yA2": 100,
+  "hB1": 50,
+  "xB1": 0,
+  "yB1": -200,
+  "hB2": 50,
+  "xB2": 0,
+  "yB2": 200,
+  "colorCS": "rgb(250,250,250)",
+  "emissiveCS": "rgb(52,34,29)",
+  "specularCS": "rgb(0,0,0)",
+  "metalness": 0.28,
+  "roughness": 0.5,
+  "opaciteCS": 1,
+  "wireframe": false,
+  "nameTexture": "steel",
+  "dataURL": "",
+  "typedataURL": "",
+  "lati": 43.6,
+  "longi": 0,
+  "adresse": "",
+  "urlOpenStreet": "",
+  "timezone": "",
+  "offset_sec": 0,
+  "offset_string": "",
+  "now_in_dst": 0,
+  "dst": 0,
+  "autoLocation": false,
+  "heuresSolaires": false,
+  "heuresLegalesSummerAutums": true,
+  "heuresLegalesWinterSpring": false,
+  "heuresAntiques": false,
+  "heuresBabyloniques": false,
+  "heuresItaliques": false,
+  "heuresSideralesWS": false,
+  "heuresSideralesSA": false,
+  "heuresPlanetairesWS": false,
+  "heuresPlanetairesSA": false,
+  "colorHS": "rgb(200,0,0)",
+  "colorHLSummerAutums": "rgb(0,200,5)",
+  "colorHLWinterSpring": "rgb(0,0,200)",
+  "colorHeuresAntiques": "rgb(200,0,200)",
+  "colorHeuresBabyloniques": "rgb(0,150,200)",
+  "colorHeuresItaliques": "rgb(0,150,100)",
+  "colorHeuresSDSA": "rgb(100,100,10)",
+  "colorHeuresSDWS": "rgb(102,16,10)",
+  "colorHeuresHPSA": "rgb(250,250,10)",
+  "colorHeuresHPWS": "rgb(1,250,10)",
+  "textSizeHS": 1,
+  "textSizeSA": 1,
+  "textSizeWS": 1,
+  "textSizeHA": 1,
+  "textSizeHB": 0.6,
+  "textSizeHI": 0.6,
+  "textSizeSDSA": 0.6,
+  "textSizeSDWS": 0.6,
+  "textSizeHPSA": 0.6,
+  "textSizeHPWS": 1,
+  "hoursTextSize": 1,
+  "subDivisions": 1,
+  "precisionHours": 5,
+  "equinoxeAndSolstices": false,
+  "colorequinoxeAndSolstice": "rgb(152,0,0)",
+  "datesArcsDiurnes": [
+    [
+      "equinoxe",
+      0
+    ],
+    [
+      "solstice",
+      0.40910517666747087
+    ],
+    [
+      "solstice",
+      -0.40910517666747087
+    ]
+  ],
+  "precisionArcs": 15,
+  "devise": "",
+  "positionDevisex": -66.66667400828686,
+  "positionDevisey": 66.66667400828686,
+  "deviseSize": 0.5,
+  "axesESZ": true,
+  "axesXYZ": false,
+  "voirTerre": false,
+  "vrotscene": 0,
+  "vrotSun": 0,
+  "linkMedia": "",
+  "autoCloseMenu": true,
+  "background": "rgb(60,100,140)",
+  "unitSVG": "auto",
+  "separateurCSV": ";",
+  "nameFile": "Cube",
+  "export": "Sundial(.JSON)",
+  "typePolyedre": "Cube",
+  "rayonPolyedre": 200,
+  "conicity": 2,
+  "polyGx": [
+    0,
+    50,
+    0,
+    0,
+    -103.8,
+    94.5
+  ],
+  "polyGy": [
+    115.4,
+    0.4,
+    110.8,
+    0,
+    115.4,
+    125.9
+  ],
+  "polyGz": [
+    66.66667400828686,
+    50,
+    39.9,
+    0,
+    50,
+    50
+  ],
+  "polyheuresSolaires": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "polyheuresLegalesSummerAutums": [
+    true,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "polyheuresLegalesWinterSpring": [
+    false,
+    false,
+    true,
+    false,
+    false,
+    false
+  ],
+  "polyheuresAntiques": [
+    false,
+    false,
+    false,
+    false,
+    true,
+    true
+  ],
+  "polyheuresBabyloniques": [
+    false,
+    true,
+    false,
+    false,
+    false,
+    false
+  ],
+  "polyheuresItaliques": [
+    false,
+    true,
+    false,
+    false,
+    false,
+    false
+  ],
+  "polyheuresSideralesWS": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "polyheuresSideralesSA": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "polyheuresPlanetairesWS": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "polyheuresPlanetairesSA": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "polyequinoxeAndSolstices": [
+    false,
+    true,
+    true,
+    false,
+    false,
+    false
+  ],
+  "polydatesArcsDiurnes": [
+    [
+      [
+        "equinoxe",
+        0
+      ],
+      [
+        "solstice",
+        0.40910517666747087
+      ],
+      [
+        "solstice",
+        -0.40910517666747087
+      ]
+    ],
+    [
+      [
+        "equinoxe",
+        0
+      ],
+      [
+        "solstice",
+        0.40910517666747087
+      ],
+      [
+        "solstice",
+        -0.40910517666747087
+      ]
+    ],
+    [
+      [
+        "equinoxe",
+        0
+      ],
+      [
+        "solstice",
+        0.40910517666747087
+      ],
+      [
+        "solstice",
+        -0.40910517666747087
+      ]
+    ],
+    [],
+    [],
+    [],
+    []
+  ],
+  "polyDev": [
+    "Heures legales 21/06 - 21 /12",
+    "Heures  Babyloniques et italiques",
+    "Heures legales 21/12 - 21/06",
+    "",
+    "Heures antiques",
+    "Heures  antiques"
+  ],
+  "polyDevx": [
+    -103.8,
+    63.2,
+    -10,
+    -10,
+    -114.3,
+    -10
+  ],
+  "polyDevy": [
+    -72.5,
+    -1.6,
+    -41.2,
+    10,
+    10,
+    10
+  ],
+  "polysubDivisions": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "polyDevTextsize": 1
+}
