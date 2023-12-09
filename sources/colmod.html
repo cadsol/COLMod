@@ -101,7 +101,7 @@
 	//	import {initPol,InitGuiPolyedres,voirSectionPoly,displayFaces,cadranPoly,torePoly} from './ModulePolyedre.js'
 // --------------------------------------------------------------------------------------------------------------------------------------	
 
-		cs.version = "2023-12-05"
+		cs.version = "2023-12-09"
         let dateJour = new Date()
 		//cs.hsol=dateJour.getHours()
 		cs.year=dateJour.getFullYear()
@@ -2236,7 +2236,7 @@
 				if (cs.typeForme=="parametric"){gzfxy.enable()}else{gzfxy.disable()}
 				zPosController.disable()
 				ctlRot.disable()
-				eulerCsGroup()
+				//eulerCsGroup()
 				PlacerLaTerre()
 				PlacerLeSoleil()
 				groupAxes.add(axeX)
@@ -3318,7 +3318,7 @@
 
 			orienterAxedumonde()
 			PlacerLaTerre()
-			eulerCsGroup();
+			//eulerCsGroup();
 			//eulerEarthGroup() 
 
 			PlacerLeSoleil();
