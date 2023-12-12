@@ -97,11 +97,11 @@
 			HPSA="Planetary (summer, autumn)",HPWS = "Planetary (winter, spring)";
 
 // -----------------------------------COLVARS--------------------------------------------------------------------------------------------
-		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM} from './colvars.js';
+		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM} from './colvariables.js';
 	//	import {initPol,InitGuiPolyedres,voirSectionPoly,displayFaces,cadranPoly,torePoly} from './ModulePolyedre.js'
 // --------------------------------------------------------------------------------------------------------------------------------------	
 
-		cs.version = "2023-12-11"
+		cs.version = "2023-12-05"
         let dateJour = new Date()
 		//cs.hsol=dateJour.getHours()
 		cs.year=dateJour.getFullYear()
@@ -212,7 +212,7 @@
 		let cadranSolaireGroup, axeMondeGroup, earthGroup;
 
 		let  gnomon,gnomonTore, meshDevise, stylePolaire, sousStylaire,stylePlan,styleBord, BoutStyle,FinStyle,
-		    styleAnalem, centreAnalem, styleTorique, filHorizontal, filVertical, pilierH1, pilierH2, pilierH3, pilierH4;
+		    styleAnalem,styleTorique, filHorizontal, filVertical, pilierH1, pilierH2, pilierH3, pilierH4;
 
 		let heuresSolairesGroup, heuresLegalesGroupSA, heuresLegalesGroupWS, heuresAntiquesGroup, arcsDiurnesGroup;
 		let heuresBabyloniquesGroup, heuresItaliquesGroup, heuresSDSAgroup, heuresSDWSgroup,groupAxes;
@@ -313,10 +313,8 @@
 
 
 		function Info(text){
-			document.getElementById("info").innerHTML ="<h3>"+text+"</h3>"
-			//document.getElementById("info").innerHTML =text
+			document.getElementById("info").innerText = text;
 		}
-		
 
         
 		function CercleSetting(h,e, spline, nsteps) {		
@@ -735,10 +733,7 @@
 																  }
 			group.add(mesh);
 			listeMesh.push(mesh);
-			// if (gauche) { x = x - (texte.length - 1) * 7 * cs.hoursTextSize }//else{x=x+7*cs.hoursTextSize}
-			let txtl = texte.length * 5 * cs.hoursTextSize;
-			if (gauche) x -= txtl;
-			// A mon avis les deux lignes suivantes n'ont pas vraiment d'intérêt - Yvon
+			if (gauche) { x = x - (texte.length - 1) * 7 * cs.hoursTextSize }//else{x=x+7*cs.hoursTextSize}
 			if ((x + 7 * cs.hoursTextSize) > (cs.largeur / 2 - 5)) { x -= 14 * cs.hoursTextSize }
 			if ((y + 7 * cs.hoursTextSize) > (cs.hauteur / 2 - 5)) { y -= 14 * cs.hoursTextSize }
 			mesh.position.x = x;
@@ -750,7 +745,7 @@
 			if (SVGtext.length > 0) {
 				x = x + cs.largeur / 2; y = -y + cs.hauteur / 2;
 				//if (gauche) {texte=texte+"  "}else{texte="  "+texte}
-				SVGtext += `<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" font-size="${(cs.hoursTextSize * 10).toString()}" font-family="Courier New" stroke="${material.color.getStyle()}" textLength="${txtl.toFixed(2)}"> ${texte}</text>
+				SVGtext += `<text x="${x.toString()}" y="${y.toString()}" font-size="${(cs.hoursTextSize * 10).toString()}" font-family="Courier New" stroke="${material.color.getStyle()}"> ${texte}</text>
            `
 			}
 
@@ -789,7 +784,7 @@
 			initCSVtext()
 			if (cs.typeCadran == ANL) {
 				TracerAnalem();
-				// EcrirelesDates()
+				EcrirelesDates()
 			} else {
 				
 				if (cs.heuresSolaires) { TracerHeuresSolaires() }
@@ -826,14 +821,10 @@
 			return [x, y, z];
 		}
 
-		let xd = 0, yd = 0, zd = 1    // Direction Gnomon analemmatique  Modif AJL 
 
+		let xd = 0, yd = 0, zd = 1    // Direction Gnomon analemmatique  Modif AJL 
 		function Proj([x, y, z]) {            // Projection sur le cadran avec mise à la dimension R
-			x *= cs.Ranalem; y *= cs.Ranalem; z *= cs.Ranalem;
-			const bc = cs.Canalem? 1: 0;
-			const pr = cs.Canalem && (Math.abs(zd) <= Math.sign(zd)*z)?
-				-cs.epaisseur / 2: cs.epaisseur / 2;
-			return new Point((y * zd - z * xd) / (zd - bc * z) + cs.xgnomon, (-x * zd - z * yd) / (zd - bc * z) + cs.ygnomon, pr);
+			return new Point(cs.Ranalem * (y - z * xd / zd), cs.Ranalem * (-x - z * yd / zd),0);
 		}
 
 		function TracerAnalem() {
@@ -842,7 +833,7 @@
 			//CSVtext += "\n\n"
 			//CSVtext += 'Solar hours'+"\n\n"
 
-			var frh = 1, cl = 0, fh = 0;
+			var frh = 1, cl = 0, fh = 0; // Pour 
 			var al = eclair();	// Angles horaires limites
 			var hd = Math.floor(Math.round(2 * frh * (al[0] * 12 / Math.PI + cl * (fh - cs.longi / 15) + 12)) / 2) / frh;
 			var h1 = Math.ceil(Math.round(2 * frh * (al[1] * 12 / Math.PI + cl * (fh - cs.longi / 15) + 12)) / 2) / frh;
@@ -851,84 +842,56 @@
 			if (hf >= hd + 24) hf = hd + 24;
 
 			var ob = .4091;		// Obliquité de l'écliptique
-						var nsg = 4;			// Nombre de segment par heure
-			var nld = 50;			// Nombre de segment pour la ligne des dates
-			var x, y, z, pj, dc, bl;
+			var prp = 50;			// Rapport des longueurs de l'échelle des dates et des tirets
+			var nsg = 4;			// Nombre de segment par heure
+			var x, y, z;
+			// Ligne horaire
 			var pths = [];
-
-			// Ligne horaire -------------------------
-			CSVtext += "Ellipse \n\n"
-			bl = false;
 			for (let hv = hd * nsg; hv <= hf * nsg; hv++) {
 				[x, y] = Rot(1, 0, 15 * hv / nsg);    // Direction du point horaire dans le repère polaire
-				pj = Proj(EtoC(x, y, 0))
-				if ((pj.z > 0) && (Math.abs(pj.x) <= cs.largeur / 2) && (Math.abs(pj.y) <= cs.hauteur / 2)) {
-					pths.push(pj);
-					bl = true;
-				} else if (bl) {
-					traceAnalem(pths, cs.egnomon, 100);  //+++ Tracé de l'ellipse
-					pths.splice(0, pths.length);		// Vide le tableau
-				    bl = false;
-					}
+				pths.push(Proj(EtoC(x, y, 0)));
 			}
-			if (bl) traceAnalem(pths, cs.egnomon, 100);  //+++ Tracé de l'ellipse
-			CSVtext += "\n\n"
-
-			// Plots horaires -------------------------
-			var plotGeo, plotMesh;
-			var dx, dy, rc; 
-			for (let hv = hd; hv <= hf; hv++) {
-				[x, y] = Rot(1, 0, 15 * hv) // Direction du point horaire dans le repère polaire
-				pj = Proj(EtoC(x, y, 0));
-				if ((pj.z > 0) && (Math.abs(pj.x) <= cs.largeur / 2) && (Math.abs(pj.y) <= cs.hauteur / 2)) {
-					plotGeo = new THREE.CylinderGeometry();
-					plotMesh = new THREE.Mesh(plotGeo, materialAnalem);
-					plotMesh.position.set(pj.x, pj.y, pj.z);
-					plotMesh.scale.set(3*cs.egnomon, 2*cs.egnomon, 3*cs.egnomon);
-					plotMesh.rotateX(Math.PI/2);
-					analemListeMesh.push(plotMesh);
-					analemGroup.add(plotMesh);
-					disqueSVG(pj.x, pj.y, 3*cs.egnomon, cs.colorAnalem);
-					CSVtext += "hour: " + hv.toString() + " H \n";
-					ligneCSV("point", pj.x, pj.y, pj.z);
-					dx = pj.x - cs.xgnomon; dy = pj.y - cs.ygnomon;
-					rc = 8 * cs.hoursTextSize / Math.sqrt(dx ** 2 + dy ** 2);
-					dx *= rc; dy *= rc;
-					dx -= 2.5 * hv.toString().length * cs.hoursTextSize;
-					dy -= 3.5 * cs.hoursTextSize;
-					EcrireTexte(hv.toString(), pj.x + dx, pj.y + dy, pj.z,
-					materialAnalem, analemGroup, analemListeMesh);
-				}
-			}
+			CSVtext+= "Ellipse \n\n"
+			traceAnalem(pths, cs.egnomon, 100);  //+++ Tracé de l'ellipse
 			CSVtext+= "\n\n"
+			// pths.splice(0, pths.length);		// Vide le tableau
+			// [x, y] = Rot(1, 0, 15*(cs.hsol - 0.05));    // Direction du point horaire dans le repère polaire
+			// pths.push(Proj(EtoC(x, y, 0)));
+			// [x, y] = Rot(1, 0, 15*(cs.hsol + 0.05));    // Direction du point horaire dans le repère polaire
+			// pths.push(Proj(EtoC(x, y, 0)));
+			// traceAnalem(pths,3*cs.egnomon,10);  //+++ Trace pour cs.hsol
+			for (let hv = hd; hv <= hf; hv++) {
+				pths.splice(0, pths.length);		// Vide le tableau
+				[x, y] = Rot(1, 0, 15 * (hv - 0.05));    // Direction du point horaire dans le repère polaire
+				pths.push(Proj(EtoC(x, y, 0)));
+				[x, y] = Rot(1, 0, 15 * (hv + 0.05));    // Direction du point horaire dans le repère polaire
+				pths.push(Proj(EtoC(x, y, 0)));
+				CSVtext+= "hour: " +hv.toString()+ " H \n"
+				traceAnalem(pths, 3 * cs.egnomon, 10);  //+++ Trace pour cs.hsol
+				[x, y] = Rot(1, 0, 15 * hv)
+				// [x, y]=Proj(EtoC(x, y, 0))
+				EcrireTexte(hv.toString(),
+					Proj(EtoC(x, y, 0)).x + cs.xgnomon,
+					Proj(EtoC(x, y, 0)).y + cs.ygnomon,
+					cs.epaisseur / 2,
+					materialAnalem, analemGroup, analemListeMesh)
 
-			// Ligne des dates -------------------------
-			pths.splice(0, pths.length);		// Vide le tableau
-			CSVtext += "Line for the date \n"
-			bl = false;
-			for (let ndc = 0; ndc <= nld; ndc++) {
-				dc = ob * (2 * ndc / nld - 1);
-				pj = Proj(EtoC(0, 0, Math.tan(dc)))
-				if ((Math.abs(pj.x) <= cs.largeur / 2) && (Math.abs(pj.y) <= cs.hauteur / 2)) {
-					pj.z = Math.abs(pj.z)
-					pths.push(pj);
-					bl = true;
-				} else if (bl) {
-					traceAnalem(pths, cs.egnomon / 2, 10);  //+++ Tracé de la ligne des dates
-					pths.splice(0, pths.length);		// Vide le tableau
-					bl = false;
-				}
 			}
-			if (bl) traceAnalem(pths, cs.egnomon / 2, 10);  //+++ Tracé de la ligne des dates
 
-			// Graduation de la ligne des dates -----------------
-			EcrirelesDates()
+			CSVtext+= "\n\n"
+			pths.splice(0, pths.length);		// Vide le tableau
+			// Ligne des dates
+			CSVtext+= "Line for the date \n"
+			pths.push(Proj(EtoC(0, 0, Math.tan(-ob))));
+			pths.push(Proj(EtoC(0, 0, Math.tan(ob))));
+			//dx, dy = (y2 - y1)/prp, (x1 - x2)/prp;
+			traceAnalem(pths, cs.egnomon / 2, 10);  //+++ Tracé de la ligne des dates
 
 			cadranSolaireGroup.add(analemGroup);
 		}
 
 		function traceAnalem(points, eptrait, npoints) {
-			let tubeGeometry, mesh, xp, yp, zp, pipeSpline, pipeSplineCRC;
+			let tubeGeometry, mesh, xp, yp, zp, pipeSpline, pipeSplineCRC, xs, ys;
 			pipeSpline = [];
 			if (SVGtext.length > 0) {
 				SVGtext += ` 
@@ -936,11 +899,15 @@
 		           points= " `
 			}
 			for (let p = 0; p < points.length; p++) {
-				xp = points[p].x; yp = points[p].y; zp = points[p].z
+				xp = points[p].x + cs.xgnomon;
+				yp = points[p].y + cs.ygnomon;
+				zp = (cs.epaisseur + cs.egnomon) / 2;
 				pipeSpline.push(new THREE.Vector3(xp, yp, zp));
-				ligneCSV("point", xp, yp, zp);
+				//CSVtext += "point: " + cs.separateurCSV + xp.toFixed(2) + cs.separateurCSV + yp.toFixed(2) + "\n";
+				ligneCSV("point",xp,yp,zp)
 				if (SVGtext.length > 0) {
-					SVGtext += `${(xp + cs.largeur/2).toFixed(3)},${(-yp + cs.hauteur/2).toFixed(3)}   `
+					xs = xp + cs.largeur / 2; ys = -yp + cs.hauteur / 2;
+					SVGtext += `${xs.toFixed(3)},${ys.toFixed(3)}   `
 				}
 			}
 			if (SVGtext.length > 0) { SVGtext += `" />` }
@@ -974,21 +941,13 @@
 			k2 = e * sinj1 * sinj2 / sinj1mj2
 		}
 
-		function disqueSVG(x, y, r, cl) {
-			if (SVGtext.length > 0) {
-				x += cs.largeur / 2; y = -y + cs.hauteur / 2;
-				SVGtext += `<circle cx="${x.toFixed(3)}" cy="${y.toFixed(3)}" r="${r.toFixed(3)}" fill="${cl}" />
-				`;
-			}
-		}
-
-		function ligneSVG(xg, yg, xp, yp, wd=1, cl="black") {
+		function ligneSVG(xg, yg, xp, yp) {
 			if (SVGtext.length > 0) {
 				xg = xg + cs.largeur / 2; yg = -yg + cs.hauteur / 2
 				xp = xp + cs.largeur / 2; yp = -yp + cs.hauteur / 2
 				SVGtext += `
 			<line x1="${xg.toFixed(3)}" y1="${yg.toFixed(3)}" x2="${xp.toFixed(3)}" y2="${yp.toFixed(3)}"
-			stroke="${cl}" stroke-width="${wd.toFixed(2)}"/>
+			stroke="black" stroke-width="1"/>
 			`}
 		}
 
@@ -999,41 +958,45 @@
 
 
 		function EcrirelesDates() {
-			let dx, dy, rc, an, pj, j, jde, ae, js, ms, gradGeo, gradMesh;
-			CSVtext+="\n\n";
-			CSVtext+="Date for the style \n\n";
-			pj = Proj(EtoC(0, 0, .01)); dx = pj.x - cs.xgnomon; dy = pj.y - cs.ygnomon;
-			rc = Math.sqrt(dx**2 + dy**2); dx /= rc; dy /= rc;  // Normalisation
-			rc = 3 * cs.hoursTextSize // pour le décalage de l'écriture
+			let pg, xp, yp, j, jde, ae, agauche, js, ms, mm, jj,gradGeo=[],gradMesh=[]
+			//cs.hoursTextSize*=0.5
+			CSVtext+="\n\n"
+			CSVtext+="Date for the style \n\n"
 			for (let m = 1; m < 13; m++) {
-				j = cs.dateAnalem;
+				// if (typeof (gradGeo[m-1]) !== "undefined") { gradGeo[m-1].geometry.dispose() };
+				// cadranSolaireGroup.remove(gradMesh[m-1]);
+				j = cs.dateAnalem
 				jde = JULIAN.CalendarGregorianToJD(cs.year, m, j);
+				mm = JULIAN.JDToCalendarGregorian(jde).month
+				jj = JULIAN.JDToCalendarGregorian(jde).day
 				ae = apparentEquatorial(jde);
-				pj = Proj(EtoC(0, 0, Math.tan(ae.dec)));
-				pj.z = Math.abs(pj.z);
-				if ((Math.abs(pj.x) <= (cs.largeur / 2)) && (Math.abs(pj.y) <= (cs.hauteur / 2))) {
-				gradGeo = new THREE.CylinderGeometry();
-				gradMesh = new THREE.Mesh(gradGeo, materialAnalem);
-					gradMesh.scale.set(cs.egnomon, 4, cs.egnomon);
-					gradMesh.rotateZ(Math.atan2(dy, dx));
-					js = j.toString();
-					ms = m.toString(); if (m < 10) { ms = '0' + ms };
-				if ((jde > TS.solJuin) && (jde < TS.solDecembre)) {  // à gauche
-					gradMesh.position.set(pj.x - 2 * dy, pj.y + 2 * dx, pj.z);
-					EcrireTexte(js + "/" + ms, pj.x - 6 * dy, pj.y + 6 * dx - rc, pj.z,
-							materialAnalem, analemGroup, analemListeMesh, true);
-						ligneSVG(pj.x - 4 * dy, pj.y + 4 * dx, pj.x, pj.y, cs.egnomon, cs.colorAnalem);
-					} else {
-					gradMesh.position.set(pj.x + 2 * dy, pj.y - 2 * dx, pj.z);
-					EcrireTexte(js + "/" + ms, pj.x + 6 * dy, pj.y - 6 * dx - rc, pj.z,
-							materialAnalem, analemGroup, analemListeMesh, false);
-					ligneSVG(pj.x, pj.y, pj.x + 4 * dy, pj.y - 4 * dx, cs.egnomon, cs.colorAnalem);
+				pg = Proj(EtoC(0, 0, Math.tan(ae.dec)));
+				xp = pg.x + cs.xgnomon; yp = pg.y + cs.ygnomon
+				gradGeo.push(new THREE.CylinderGeometry())
+				gradMesh.push(new THREE.Mesh(gradGeo[m-1],materialAnalem))
+				cadranSolaireGroup.add(gradMesh[m-1])
+				gradMesh[m-1].position.set(xp,yp,cs.epaisseur/2)
+				gradMesh[m-1].scale.set(cs.egnomon,4*cs.egnomon,cs.egnomon)
+				gradMesh[m-1].rotateZ(Math.PI/2) 
+				//debutGnomon.position.x=xp;	debutGnomon.position.y=yp ; debutGnomon.position.z= (cs.egnomon+cs.epaisseur)/2
+				if ((jde > TS.solJuin) && (jde < TS.solDecembre)) { agauche = true } else { agauche = false }
+				js = jj.toString()
+				ms = mm.toString(); if (m < 10) { ms = '0' + ms }
+				if (agauche) {
+					gradMesh[m-1].position.set(xp-4,yp,cs.epaisseur/2)
+					EcrireTexte(js + "/" + ms + " ", xp, yp,cs.epaisseur / 2, materialAnalem, analemGroup, analemListeMesh, true)
+					ligneSVG(xp - 5, yp, xp, yp)
 				}
-				ligneCSV(js + "/" + ms + " : ", pj.x, pj.y);
-				analemListeMesh.push(gradMesh);
-				analemGroup.add(gradMesh);
+				else {
+					gradMesh[m-1].position.set(xp+4,yp,cs.epaisseur/2)
+					EcrireTexte(js + "/" + ms, xp + 7, yp,cs.epaisseur / 2, materialAnalem, analemGroup, analemListeMesh, false)
+					ligneSVG(xp, yp, xp + 4, yp)
+				}
+				ligneCSV(js + "/" + ms + " : ",xp,yp)
+				analemListeMesh.push(gradMesh[m-1]);
+				analemGroup.add(gradMesh[m-1]);
 			}
-			}
+			//cs.hoursTextSize*=2
 		}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1066,7 +1029,6 @@
 			if (typeof (stylePolaire) !== "undefined") { stylePolaire.geometry.dispose() };
 			if (typeof (sousStylaire) !== "undefined") { stylePolaire.geometry.dispose() };
 			if (typeof (styleAnalem) !== "undefined") { styleAnalem.geometry.dispose() };
-if (typeof (centreAnalem) !== "undefined") { centreAnalem.geometry.dispose() };
 			if (typeof (stylePlan) !== "undefined") { stylePlan.geometry.dispose() };
 			if (typeof (styleBord) !== "undefined") { styleBord.geometry.dispose() };
 			cadranSolaireGroup.remove(FinStyle);
@@ -1074,7 +1036,6 @@ if (typeof (centreAnalem) !== "undefined") { centreAnalem.geometry.dispose() };
 			cadranSolaireGroup.remove(stylePolaire);
 			cadranSolaireGroup.remove(sousStylaire);
 			cadranSolaireGroup.remove(styleAnalem);
-			cadranSolaireGroup.remove(centreAnalem);
 			cadranSolaireGroup.remove(stylePlan);
 			cadranSolaireGroup.remove(styleBord);
 			if (typeof (filHorizontal) !== "undefined") { filHorizontal.geometry.dispose() };
@@ -1263,41 +1224,22 @@ if (typeof (centreAnalem) !== "undefined") { centreAnalem.geometry.dispose() };
 			}
 
 			if (cs.typeCadran == ANL) {
-				if (cs.zdirect == 0) cs.zdirect = 0.01;
-				xd = cs.zdirect * cs.Ranalem * Math.sin(base.toRad(cs.xdirect)) * Math.cos(base.toRad(cs.ydirect));
-				yd = cs.zdirect * cs.Ranalem * Math.sin(base.toRad(cs.ydirect));
-				zd = cs.zdirect * cs.Ranalem * Math.cos(base.toRad(cs.xdirect)) * Math.cos(base.toRad(cs.ydirect));
-				const ct = new Point(xd + cs.xgnomon, yd + cs.ygnomon, zd + cs.epaisseur / 2); 
-				const pj = Proj(EtoC(0, 0, Math.tan(TS.decSuns[cs.dayofYear - 1])));
-				pj.z = Math.abs(pj.z);
-				const xp = pj.x - cs.xgnomon, yp = pj.y - cs.ygnomon;
-				const v1 = cs.Canalem && (zd < 0)? new THREE.Vector3(ct.x, ct.y, ct.z): new THREE.Vector3(pj.x, pj.y, pj.z);
-				
-				var k, v2;
-				if (!cs.Canalem) {
-					k = cs.Hanalem / cs.zdirect;
-					v2 = new THREE.Vector3(pj.x + k * xd, pj.y + k * yd, pj.z + k * zd);
-				} else
-					if (zd < 0) {
-						k = (cs.Hanalem - cs.zdirect) * cs.Ranalem / Math.sqrt((xd - xp) ** 2 + (yd - yp) ** 2 + zd ** 2);
-						v2 = new THREE.Vector3(ct.x + k * (xp - xd), ct.y + k * (yp - yd), ct.z - k * zd);
-					} else {
-						k = cs.Hanalem * cs.Ranalem / Math.sqrt((xd - xp) ** 2 + (yd - yp) ** 2 + zd ** 2);
-						v2 = new THREE.Vector3(pj.x + k * (xd - xp), pj.y + k * (yd - yp), pj.z + k * zd);
-					}
-
-				const tubeGeometry = new THREE.TubeGeometry(new THREE.LineCurve3(v1, v2), 16, cs.egnomon, 32);
-				styleAnalem = new THREE.Mesh(tubeGeometry, materialGnomon);
+				xd = zd * Math.tan(base.toRad(cs.xdirect))
+				yd = zd * Math.tan(base.toRad(cs.ydirect))
+				const pg = Proj(EtoC(0, 0, Math.tan(TS.decSuns[cs.dayofYear - 1])));
+				const xp = pg.x + cs.xgnomon, yp = pg.y + cs.ygnomon, zp = cs.epaisseur / 2;
+				// const v1 = new THREE.Vector3(xp, yp, zp);
+				// const k = cs.Hanalem/Math.sqrt(cs.xdirect*cs.xdirect + cs.ydirect*cs.ydirect + cs.zdirect*cs.zdirect);
+				// const v2 = new THREE.Vector3(xp + k*cs.xdirect, yp + k*cs.ydirect, zp + k*cs.zdirect);
+				const v1 = new THREE.Vector3(xp, yp, zp);
+				const k = cs.Hanalem / Math.sqrt(xd * xd + yd * yd + zd * zd);
+				const v2 = new THREE.Vector3(xp + k * xd, yp + k * yd, zp + k * zd);
+				const tubeGeometrySP = new THREE.TubeGeometry(new THREE.LineCurve3(v1, v2), 16, cs.egnomon, 32);
+				styleAnalem = new THREE.Mesh(tubeGeometrySP, materialGnomon);
 				styleAnalem.castShadow = true;
 				cadranSolaireGroup.add(styleAnalem);
-				if (cs.Canalem) {
-					//const centreGeometry = new THREE.IcosahedronGeometry(3 * cs.egnomon, 1);
-					const centreGeometry = new THREE.SphereGeometry(3 * cs.egnomon, 32, 16);
-					centreAnalem = new THREE.Mesh(centreGeometry, materialGnomon);
-					centreAnalem.castShadow = true;
-					centreAnalem.position.set(ct.x, ct.y, ct.z);
-					cadranSolaireGroup.add(centreAnalem);
-				}
+				//EcrirelesDates()
+				//if (ligneDate.length>0) {EcrireTexte(ligneDate,xp,yp,materialAnalem,analemGroup,analemListeMesh)}
 			}
 		}  //Tracer Style
 
@@ -2373,8 +2315,7 @@ if (typeof (centreAnalem) !== "undefined") { centreAnalem.geometry.dispose() };
 					cadranSolaireGroup.remove(arcsDiurnesGroup);*/
 					gnomon.visible = false;
 					ctlIncli.enable();
-					//cs.incli=0;
-					eulerCsGroup();
+					cs.incli=0;eulerCsGroup();
 					folderAnalem.show();
 					TracerHeuresEtArcs();
 					EcrireDevise(cs.devise, cs.positionDevisex, cs.positionDevisey);
@@ -2413,12 +2354,10 @@ if (typeof (centreAnalem) !== "undefined") { centreAnalem.geometry.dispose() };
 			function helpGui(g, textHelp) {
 				g.domElement.addEventListener("mouseover", function () {
 					//document.getElementById("info").innerHTML=textHelp
-					//gui.title(textHelp)
-					Info(textHelp)
+					gui.title(textHelp)
 				})
 				g.domElement.addEventListener("mouseout", function () {
-					//gui.title("Edit sundial...")
-					Info("")
+					gui.title("Edit sundial...")
 				})
 			}
 
@@ -2658,11 +2597,7 @@ if (typeof (centreAnalem) !== "undefined") { centreAnalem.geometry.dispose() };
 
 			//// ANALEMMATIQUE  +++
 
-			const folderAnalem = folderGnomon.addFolder(" gnomon");
-			folderAnalem.add(cs, "Canalem")
-				.name("Central proj.")
-				.onChange(function () { TracerStyle() })
-				.onFinishChange(function () { TracerHeuresEtArcs() })
+			const folderAnalem = folderGnomon.addFolder("Analematic gnomon");
 			folderAnalem.add(cs, "xdirect", -89, 89, 0.1)
 				.name("← → °")
 				.onChange(function () { TracerStyle() })
@@ -2671,18 +2606,20 @@ if (typeof (centreAnalem) !== "undefined") { centreAnalem.geometry.dispose() };
 				.name("↑ ↓ °")
 				.onChange(function () { TracerStyle() })
 				.onFinishChange(function () { TracerHeuresEtArcs() });
-			folderAnalem.add(cs, "zdirect", -3, 3, 0.01)
-			.name("Distance")
-			.onChange(function () {TracerStyle()})
-			.onFinishChange(function () {TracerHeuresEtArcs()});
-			folderAnalem.add(cs, "Hanalem", 0.5, 5, 0.01)
+			//folderAnalem.add(cs, "zdirect", -500, 500, 0.1)
+			//	.name("Alt")
+			//	.onChange(function () {TracerStyle()})
+			//	.onFinishChange(function () {TracerHeuresEtArcs()});
+			folderAnalem.add(cs, "Hanalem", 1, 500, 0.1)
 				.name("Gnomon length")
 				.onChange(function () { TracerStyle() })
 				.onFinishChange(function () { TracerHeuresEtArcs() });
-			folderAnalem.add(cs, "Ranalem", 10, 500, 1)
+			folderAnalem.add(cs, "Ranalem", 1, 500, 0.1)
 				.name("elliptical radius")
 				.onChange(function () { TracerStyle() })
 				.onFinishChange(function () { TracerHeuresEtArcs() });
+			//folderAnalem.add(cs, "Canalem")
+			//	.name("Central projection")
 			folderAnalem.addColor(cs, "colorAnalem")
 				.name("Color")
 				.onChange(function (e) {
@@ -3817,7 +3754,7 @@ if (typeof (centreAnalem) !== "undefined") { centreAnalem.geometry.dispose() };
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	function displayFaces(Pol) {
 		let nSommetsParFace = 0, v,h,hmax,dmax=[]
-        let text=""
+        
 		let a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), 
 		        normalFace = new THREE.Vector3()
 				//,Oworld=new THREE.Vector3(0,0,0)
@@ -3904,8 +3841,7 @@ if (typeof (centreAnalem) !== "undefined") { centreAnalem.geometry.dispose() };
 			hauteursGnomons.push(h)	 
 			gnomonPoly.castShadow = true
 			gnomonPoly.receiveShadow = false
-		// text=text+"."
-		// Info(text)
+		
 		} //f
 
 		cadranSolaireGroup.add(meshFacesGroup)

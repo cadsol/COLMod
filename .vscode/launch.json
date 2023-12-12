@@ -22,15 +22,21 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Open colmod.html",
+            "name": "colmod.html",
             "url": "http://192.168.1.14/CadsolOnLine/sources/colmod.html"
            
         },
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Open colmodPub.html",
-            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod2023-09-08.html"
+            "name": "colmod_ym2.html",
+            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod_ym2.html"
+        }
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "colmo_jl2.html",
+            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod_jl2.html"
         }
     ]
 }
