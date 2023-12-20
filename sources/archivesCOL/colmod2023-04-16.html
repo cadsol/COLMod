@@ -77,7 +77,6 @@
 		import { PLYLoader } from './jsm/loaders/PLYLoader.js';
 		import { OBJLoader } from './jsm/loaders/OBJLoader.js';
 		import { ParametricGeometry } from './jsm/geometries/ParametricGeometry.js';
-		import { ConvexGeometry } from './jsm/geometries/ConvexGeometry.js';
 
 
 
@@ -93,10 +92,10 @@
 			HSDSA = "Sidereals (summer, autumn)", HSDWS = "Sidereals (winter, spring)";
 
 // -----------------------------------COLVARS--------------------------------------------------------------------------------------------
-		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM } from './colvars2023-04-10.js';
+		import { SP, BF, BFG, ANL,RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair,HTLM } from './colvars2023-04-25.js';
 // --------------------------------------------------------------------------------------------------------------------------------------	
 
-		cs.version = "2023-04-18"
+		cs.version = "2023-04-16"
         let dateJour = new Date()
 		//cs.hsol=dateJour.getHours()
 		cs.year=dateJour.getFullYear()
@@ -157,7 +156,6 @@
 		//renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 		//renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 		renderer.shadowMap.type = THREE.PCFShadowMap 
-		renderer.localClippingEnabled = true;
 		
 		renderer.toneMappingExposure = 1;
 		container.appendChild(renderer.domElement);
@@ -185,8 +183,8 @@
 		menu.appendChild(buttonNewSundial);
 		const NFexemple = location.hash.substring(1)
 		buttonNewSundial.addEventListener("click", function () {
+			if (NFexemple.length > 0) {NouveauCadran=false} else {NouveauCadran=true}
 			Info(NFexemple)
-			if (NFexemple.length > 0) {NouveauCadran=false} else {NouveauCadran=true}			
 			run() });
 
 
@@ -200,7 +198,7 @@
 		version.innerHTML = "Version: " + cs.version
 
 		let cadranSolaireGroup, axeMondeGroup, earthGroup;
-		let cadran, gnomon,gnomonTore, meshDevise, stylePolaire, sousStylaire,Plaque, styleAnalem,styleTorique, filHorizontal, filVertical, pilierH1, pilierH2, pilierH3, pilierH4;
+		let cadran, gnomon,gnomonTore, meshDevise, stylePolaire, sousStylaire, styleAnalem,styleTorique, filHorizontal, filVertical, pilierH1, pilierH2, pilierH3, pilierH4;
 		let heuresSolairesGroup, heuresLegalesGroupSA, heuresLegalesGroupWS, heuresAntiquesGroup, arcsDiurnesGroup;
 		let heuresBabyloniquesGroup, heuresItaliquesGroup, heuresSDSAgroup, heuresSDWSgroup,groupAxes;
 		let heuresSolairesListeMesh, heuresLegalesListeMeshSA, heuresLegalesListeMeshWS, heuresAntiquesListeMesh,
@@ -288,7 +286,7 @@
 		// *********************************************************************************************************************************
 		
 		function Info(text){
-			document.getElementById("info").innerText = text;
+			document.getElementById("info").innerHTML = text;
 		}
 
         
@@ -336,14 +334,10 @@
 		cadran=cadranBox.clone()
 
 		//SphereGeometry(radius : Float, widthSegments : Integer, heightSegments : Integer, phiStart : Float, phiLength : Float, thetaStart : Float, thetaLength : Float)
-		// const clipPlanes = [
-		// 		new THREE.Plane( new THREE.Vector3( 1, 0, 0 ), 0 ),
-		// 		new THREE.Plane( new THREE.Vector3( 0, - 1, 0 ), 0 ),
-		// 		new THREE.Plane( new THREE.Vector3( 0, 0, - 1 ), 0 )
-		// 	];
+		
 
 		const materialGnomon = new THREE.MeshStandardMaterial(
-			{ transparent: true, opacity: 1, roughness: 0.1, metalness: 0.5, side: THREE.DoubleSide, color: 0xffffff, map: textureAcier /*,clippingPlanes:clipPlanes */ });
+			{ transparent: true, opacity: 1, roughness: 0.1, metalness: 0.5, side: THREE.DoubleSide, color: 0xffffff, map: textureAcier  });
 		const geometryGnomon = new THREE.CylinderGeometry(1, 1, 1, 16);
 		gnomon = new THREE.Mesh(geometryGnomon, materialGnomon);
 		//const geometryTore = new THREE.TorusGeometry();
@@ -391,14 +385,14 @@
 
 		// clouds
 
-		const materialClouds = new THREE.MeshLambertMaterial({
-				map: textureLoader.load('textures/planets/earth_clouds_1024.png'),
-				//map: textureLoader.load( 'textures/planets/earth_ligths_1024.png' ),
-				transparent: true
-			});
-			const cloudsScale = 1.005
-			const meshClouds = new THREE.Mesh(earthGeometry, materialClouds);
-			earthGroup.add(meshClouds);
+const materialClouds = new THREE.MeshLambertMaterial( {
+map: textureLoader.load( 'textures/planets/earth_clouds_1024.png' ),
+//map: textureLoader.load( 'textures/planets/earth_ligths_1024.png' ),
+transparent: true
+} );
+const cloudsScale = 1.005
+const meshClouds = new THREE.Mesh( earthGeometry, materialClouds );
+earthGroup.add( meshClouds );
 
 		//sun
 		const geometrySun = new THREE.SphereGeometry(15, 32, 16);
@@ -412,8 +406,7 @@
 		const sphereSun = new THREE.Mesh(geometrySun, materialSun);
 		axeMondeGroup.add(sphereSun);
 		sphereSun.parent = axeMonde;
-
-		//rayCaster
+		//const raySun= new THREE.Ray()
 		const rayCaster = new THREE.Raycaster()
 
 
@@ -957,11 +950,9 @@
 			if (typeof (stylePolaire) !== "undefined") { stylePolaire.geometry.dispose() };
 			if (typeof (sousStylaire) !== "undefined") { stylePolaire.geometry.dispose() };
 			if (typeof (styleAnalem) !== "undefined") { styleAnalem.geometry.dispose() };
-			if (typeof (Plaque) !== "undefined") { Plaque.geometry.dispose() };
 			cadranSolaireGroup.remove(stylePolaire);
 			cadranSolaireGroup.remove(sousStylaire);
 			cadranSolaireGroup.remove(styleAnalem);
-			cadranSolaireGroup.remove(Plaque);
 			if (typeof (filHorizontal) !== "undefined") { filHorizontal.geometry.dispose() };
 			if (typeof (filVertical) !== "undefined") { filVertical.geometry.dispose() };
 			cadranSolaireGroup.remove(filHorizontal);
@@ -993,25 +984,22 @@
 				if (cs.angleStyleSousstylaire > 0.4) {
 					//  Si l'angle Style polaire-SousStylaire> 0.4°
 					const v1 = new THREE.Vector3(cs.xPole + cs.xgnomon, cs.yPole + cs.ygnomon, (cs.epaisseur + cs.egnomon) / 2);
-					const v2 = new THREE.Vector3(cs.xgnomon, cs.ygnomon, cs.hgnomon + (cs.epaisseur /*+ cs.egnomon*/) / 2);
+					const v2 = new THREE.Vector3(cs.xgnomon, cs.ygnomon, cs.hgnomon + (cs.epaisseur + cs.egnomon) / 2);
 					const tubeGeometrySP = new THREE.TubeGeometry(new THREE.LineCurve3(v1, v2), 16, cs.egnomon, 8);
 					stylePolaire = new THREE.Mesh(tubeGeometrySP, materialGnomon);
 					stylePolaire.castShadow = true;
 					cadranSolaireGroup.add(stylePolaire);
 					//stylePolaire.visible = cs.vstyle;
 					// Sous-stylaire
-					//const v3 = new THREE.Vector3(cs.xPole + cs.xgnomon, cs.yPole + cs.ygnomon, (cs.epaisseur + cs.egnomon) / 2);
+					const v3 = new THREE.Vector3(cs.xPole + cs.xgnomon, cs.yPole + cs.ygnomon, (cs.epaisseur + cs.egnomon) / 2);
 					const v4 = new THREE.Vector3(cs.xgnomon, cs.ygnomon, (cs.epaisseur + cs.egnomon) / 2);
-					const tubeGeometrySS = new THREE.TubeGeometry(new THREE.LineCurve3(v1, v4), 16, cs.egnomon, 8);
+					const tubeGeometrySS = new THREE.TubeGeometry(new THREE.LineCurve3(v3, v4), 16, cs.egnomon, 8);
 					sousStylaire = new THREE.Mesh(tubeGeometrySS, materialGnomon);
 					sousStylaire.castShadow = true;
 					cadranSolaireGroup.add(sousStylaire);
 					//sousStylaire.visible = cs.vsousstyle
-					cadranSolaireGroup.add(gnomon);
-					
-					Plaque = new THREE.Mesh( new ConvexGeometry( [v1,v2,v4,v1]), materialGnomon );
-					Plaque.castShadow = true
-					cadranSolaireGroup.add(Plaque)
+
+					cadranSolaireGroup.add(gnomon)
 
 					//	boutGnomon.visible= cs.vgnomon	||cs.vstyle
 					//	boutGnomon.visible= cs.vsousstyle || cs.vstyle
@@ -1022,7 +1010,7 @@
 					//	debutGnomon.position.x=v1.x;debutGnomon.position.y=v1.y;debutGnomon.position.z=v1.z
 
 
-					ligneSVG(v1.x, v1.y, v4.x, v4.y)
+					ligneSVG(v3.x, v3.y, v4.x, v4.y)
 					croixSVG(v4.x, v4.y)
 					//console.log(SVGtext)
 
@@ -1875,46 +1863,44 @@
 						const NF = file.name.toLowerCase()
 						reader.readAsDataURL(file)
 						reader.addEventListener("load", () => {
-							cs.dataURL = reader.result
-							if (NF.lastIndexOf('.obj') > 0) {
-								cs.typedataURL = '.obj'
-								objloader.load(cs.dataURL, function (Lucymesh) { TracerMesh(Lucymesh) })
-							}
-							if (NF.lastIndexOf('.ply') > 0) {
-								cs.typedataURL = '.ply'
-								plyloader.load(cs.dataURL, function (LucyGeom) {
+								cs.dataURL=reader.result							
+								if (NF.lastIndexOf('.obj') > 0) {
+									cs.typedataURL='.obj'
+									objloader.load(cs.dataURL, function (Lucymesh) {TracerMesh(Lucymesh)})
+								}
+								if (NF.lastIndexOf('.ply') > 0) {
+									cs.typedataURL='.ply'
+									plyloader.load(cs.dataURL, function (LucyGeom) {									
 									const Lucymesh = new THREE.Mesh(LucyGeom, materialCS)
 									Lucymesh.geometry.computeVertexNormals()
-									TracerMesh(Lucymesh)
-								})
+									TracerMesh(Lucymesh)})
+								}
+								if (NouveauCadran == true) {
+									cs.xgnomon = 0; cs.ygnomon = 100; cs.zgnomon = 100
+									cs.epaisseur = 1; cs.hauteur = 1; cs.largeur = 1
+									cs.decli = 0; cs.incli = 90; cs.rot = 0
+								}
+								eulerCsGroup()
+								EcrireXYZ()
+								cs.typeForme = "?"
 							}
-							if (NouveauCadran == true) {
-								cs.xgnomon = 0; cs.ygnomon = 100; cs.zgnomon = 100
-								cs.epaisseur = 1; cs.hauteur = 1; cs.largeur = 1
-								cs.decli = 0; cs.incli = 90; cs.rot = 0
-							}
-							eulerCsGroup()
-							EcrireXYZ()
-							cs.typeForme = "?"
-						}
 							, false);
 					});
 					document.body.appendChild(fileInput);
 					fileInput.click();
-					cs.typeForme = '?'
+					cs.typeForme='?'
 				}
 				
 				function TracerCadranParam() {
 					//gui.domElement.style.color = 'green';
-					//Info("x and y between -1 and 1")
 					materialCS.side = THREE.DoubleSide
 					gzfxy.enable()
 					zFuncxy = Parser.parse(cs.zfxy).toJSFunction(['x', 'y']) 
 					//catch (err) { console.log("Formule incorrecte"); return }
 					let funcxyz = (u, v, target) => {
-						const xf = (u - 0.5)*2  
-						const yf = (v - 0.5)*2			
-						const zf = zFuncxy(xf, yf)
+						const xf = (u - 0.5)
+						const yf = (v - 0.5)					
+						const zf = zFuncxy(xf, yf)/2
 						target.set(xf, yf, zf)
 					}
 					const  geometryCSParam= new ParametricGeometry(funcxyz, 128, 128)
@@ -1946,7 +1932,6 @@
 				//gui.domElement.style.backgroundColor = "green" ;
 				// gui.domElement.style.cursor = "wait";
 				gzfxy.disable()
-				Info("")
 				cadranSolaireGroup.clear()
 				cadranSolaireGroup.add(axeX)
 				cadranSolaireGroup.add(axeY)
@@ -1960,7 +1945,6 @@
 				if (v == "scaphe") { cadran = cadranScaphe.clone(); TracerCadranScaphe() }
 				if (v == "file PLY, OBJ...") { TracerFichier() }
 				if (v == "parametric") { TracerCadranParam() }
-				Info("")
 				cadran.receiveShadow = true
 				cadran.castShadow=true
 				gnomon.visible = false
@@ -1979,8 +1963,7 @@
 
 
 			function initMenu(e) {
-				Info("")
-				gzfxy.disable()
+				//console.log('Debut InitMenu')
 				cadranSolaireGroup.clear();		
 				cadran=cadranBox.clone()
 				if (NouveauCadran == true) {					
@@ -2114,8 +2097,7 @@
 			const gui = new GUI(
 				{ width: Math.min(Math.round(window.innerWidth / 2), 280), title: "Edit sundial...",closeFolders:true  }
 			);
-			//const sp = "☼ "
-			const sp = ""
+			const sp = "☼ "
 			gui.$title.style.color = 'yellow'
 
 			function helpGui(g, textHelp) {
@@ -2166,7 +2148,6 @@
 								    TracerCadranRTS("parametric")}
 					           catch (err) { alert("Formule incorrecte") }
 								})
-			helpGui(gzfxy, 'x an y between -1 and 1')
 
 			const Button2D = {
 				function2D() {
@@ -2207,6 +2188,7 @@
 					w.document.close()
 				}
 			}
+			//const fiche = gui.add(ButtonFiche, 'functionFiche').name(nameW);
 
 
 			//// GEOLOCALISATION
@@ -2413,13 +2395,14 @@
 				.name("straight style visible")
 				.onChange(function (e) {
 					cs.vgnomon = e
-					gnomon.visible = e			
+					gnomon.visible = e
+				
 				})
 			folderGnomonClassic.add(cs, "vstyle")
 				.name("polar style visible")
 				.onChange(function (e) {
 					//TracerHeuresEtArcs()				    
-					stylePolaire.visible = e;Plaque.visible = e
+					stylePolaire.visible = e
 				})
 			folderGnomonClassic.add(cs, "vsousstyle")
 				.name("under style visible")
@@ -3023,20 +3006,23 @@
 			sphereEarth.rotation.y = -Math.PI * 0.5;
 
 
-			cs.autoCloseMenu=true
+			//cs.autoCloseMenu=true
 			
+
 			const couleurMenu = "#C8FAFF"
 			for (let g = 0; g < gui.folders.length; g++) {
 				gui.folders[g].$title.style.color = couleurMenu
 				gui.folders[g].close()
 				if (cs.autoCloseMenu) {
-					gui.folders[g].domElement.addEventListener("click", function () {
-						for (let ag = 0; ag < gui.folders.length; ag++) {
-							if (ag !== g) { gui.folders[ag].close() }
-						}
+					gui.folders[g].domElement.addEventListener("mouseleave", function () {
+						gui.folders[g].close()
+					})
+					gui.folders[g].domElement.addEventListener("mouseenter", function () {
+						gui.folders[g].open()
 					})
 				}
 			}
+
 
 			CadPolairesEx.close()
 			BifilairesEx.close()

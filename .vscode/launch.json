@@ -29,8 +29,8 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "colmod_ym2.html",
-            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod_ym2.html"
+            "name": "colmod_ym3.html",
+            "url": "http://192.168.1.14/CadsolOnLine/sources/colmodYM3.html"
         }
         {
             "type": "chrome",
