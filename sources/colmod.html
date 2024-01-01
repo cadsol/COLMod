@@ -79,6 +79,9 @@
 		import { STLExporter } from './jsm/exporters/STLExporter.js';
 		import { PLYLoader } from './jsm/loaders/PLYLoader.js';
 		import { OBJLoader } from './jsm/loaders/OBJLoader.js';
+		//import { RGBELoader } from './jsm/loaders/RGBELoader.js';
+		//import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
+		//import { GLTFExporter } from './jsm/exporters/GLTFExporter.js'
 		import { ParametricGeometry } from './jsm/geometries/ParametricGeometry.js';
 		import { ConvexGeometry } from './jsm/geometries/ConvexGeometry.js';
 		import { POLYHEDRA } from './polyhedra.js';
@@ -102,7 +105,7 @@
 		//	import {initPol,InitGuiPolyedres,voirSectionPoly,displayFaces,cadranPoly,torePoly} from './ModulePolyedre.js'
 		// --------------------------------------------------------------------------------------------------------------------------------------	
 
-		cs.version = "2023-12-19"
+		cs.version = "2023-12-20"
 		// const cso = structuredClone(cs)
 		// console.log(cso)
 		// for (let k in cso) { cs[k] = structuredClone(cso[k]) }
@@ -512,7 +515,8 @@
 		//let ligneDate = "";
 
 		const plyloader = new PLYLoader();
-		const objloader = new OBJLoader()
+		const objloader = new OBJLoader();
+		//const gltfloader = new GLTFLoader();
 
 		let QuaternionTexte = new THREE.Quaternion()
 
@@ -665,10 +669,18 @@
 			// loader.load('./fonts/helvetiker_regular.typeface.json', function (response) {
 			// 	fontDevise = response
 			// });helvetiker_regular.typeface.json
-			loader.load('./fonts/droid/droid_sans_bold.typeface.json', function (response) {
+
+			// loader.load('./fonts/droid/droid_sans_bold.typeface.json', function (response) {
+			// 	fontText = response
+			// });
+			// loader.load('./fonts/helvetiker_regular.typeface.json', function (response) {
+			// 	fontDevise = response
+			// });
+
+			loader.load('./fonts/optimer_regular.typeface.json', function (response) {
 				fontText = response
 			});
-			loader.load('./fonts/helvetiker_regular.typeface.json', function (response) {
+			loader.load('./fonts/optimer_regular.typeface.json', function (response) {
 				fontDevise = response
 			});
 
@@ -1341,7 +1353,7 @@
 				mesh = listeMesh[i];
 				mesh.geometry.dispose();
 				group.remove(mesh);
-				mesh.clear
+				//mesh.clear
 			}
 			listeMesh = [];
 			cadranSolaireGroup.remove(group)
@@ -1928,7 +1940,7 @@
 		function loadJsonFile() {
 			let csl;
 			const [file] = document.querySelector('input[type=file]').files;
-
+			//console.log(file)
 			const reader = new FileReader();
 			reader.addEventListener("load", () => {
 				try { csl = JSON.parse(reader.result) }
@@ -1943,6 +1955,7 @@
 			}, false);
 
 			if (file) {
+				
 				reader.readAsText(file);
 			}
 
@@ -2224,7 +2237,7 @@
 
 				gzfxy.disable()
 				Info("")
-
+				
 				folderDevise.show()
 				cadranSolaireGroup.clear()
 				cadranSolaireGroup.add(axeX)
@@ -2276,6 +2289,7 @@
 					cs.rot = 0
 					cs.hoursTextSize = 0.5
 					cs.dataURL = ""
+					cs.devise="Carpe diem"
 					//cs=cso
 				}
 
@@ -2287,6 +2301,8 @@
 				folderOrientationSundial.show()
 				gtypeForme.disable()
 				if (cs.typeForme == "parametric") { gzfxy.enable() } else { gzfxy.disable() }
+				//voirSectionPoly(RTSpolyhedre())
+				folderDevise.show(! RTSpolyhedre())
 				zPosController.disable()
 				ctlRot.disable()
 				eulerCsGroup()
@@ -3374,7 +3390,7 @@
 
 			orienterAxedumonde()
 			PlacerLaTerre()
-			eulerCsGroup();
+			//eulerCsGroup();
 			//eulerEarthGroup() 
 
 			PlacerLeSoleil();
@@ -3815,6 +3831,7 @@
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////
 		function displayFaces(Pol) {
+			if (polyhedre == undefined){return}
 			let nSommetsParFace = 0, v, h, hmax, dmax = []
 			let text = ""
 			let a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(),
@@ -4136,12 +4153,14 @@
 			displayFaces(polyhedre)
 			TracerHeuresEtArcs()
 			VoirPoly2D = false
+			cs.deviseSize=cs.polyDevTextsize
 			EcrireDevise(cs.polyDev[nfaceActive], cs.polyDevx[nfaceActive], cs.polyDevy[nfaceActive])
 			cs.xgnomon = cs.polyGx[nfaceActive]
 			cs.ygnomon = cs.polyGy[nfaceActive]
 			cs.zgnomon = cs.polyGz[nfaceActive]
 			cs.positionDevisex = cs.polyDevx[nfaceActive]
 			cs.positionDevisey = cs.polyDevy[nfaceActive]
+			
 		}
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		function InitGuiPolyedres(gui) {
@@ -4246,7 +4265,7 @@
 				.listen()
 
 			folderFaceDevise.add(cs, 'deviseSize', 0, 5, 0.1).name('font size')
-				.onChange(function (v) { cs.deviseSize = v })
+				.onChange(function (v) { cs.polyDevTextsize = v })
 				.onFinishChange(function (v) { displayFaces(polyhedre); TracerHeuresEtArcs() })
 
 			// choix du polyhedre
@@ -4380,6 +4399,7 @@
 					cs.polyequinoxeAndSolstices.push(false)
 					cs.polysubDivisions.push(1)
 				}
+				cs.polyheuresSolaires[0]=true
 			}//nouveau cadran
 
 			heuresSolairesListeMesh = []

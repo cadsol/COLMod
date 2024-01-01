@@ -5,7 +5,7 @@ import {
 	Raycaster,
 	Vector2,
 	Vector3
-} from '../../../build/three.module.js';
+} from 'three';
 
 const _plane = new Plane();
 const _raycaster = new Raycaster();
@@ -64,6 +64,12 @@ class DragControls extends EventDispatcher {
 
 		}
 
+		function getRaycaster() {
+
+			return _raycaster;
+
+		}
+
 		function onPointerMove( event ) {
 
 			if ( scope.enabled === false ) return;
@@ -93,7 +99,7 @@ class DragControls extends EventDispatcher {
 				_intersections.length = 0;
 
 				_raycaster.setFromCamera( _pointer, _camera );
-				_raycaster.intersectObjects( _objects, true, _intersections );
+				_raycaster.intersectObjects( _objects, scope.recursive, _intersections );
 
 				if ( _intersections.length > 0 ) {
 
@@ -145,7 +151,7 @@ class DragControls extends EventDispatcher {
 			_intersections.length = 0;
 
 			_raycaster.setFromCamera( _pointer, _camera );
-			_raycaster.intersectObjects( _objects, true, _intersections );
+			_raycaster.intersectObjects( _objects, scope.recursive, _intersections );
 
 			if ( _intersections.length > 0 ) {
 
@@ -199,12 +205,14 @@ class DragControls extends EventDispatcher {
 		// API
 
 		this.enabled = true;
+		this.recursive = true;
 		this.transformGroup = false;
 
 		this.activate = activate;
 		this.deactivate = deactivate;
 		this.dispose = dispose;
 		this.getObjects = getObjects;
+		this.getRaycaster = getRaycaster;
 
 	}
 

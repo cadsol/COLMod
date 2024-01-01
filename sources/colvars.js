@@ -39,16 +39,15 @@ export let cs = {
 	vstyle: true,
 	vsousstyle: true,
 	angleStyleSousstylaire: 0,
-	xPole: 0,
+	xPole: 0, 
 	yPole: 0,
 	hgnomonBord:0,
 	///++++
 	xdirect: 0,			// Direction en ° /centre de projection cadran analemmatique, positif à droite du cadran
-	ydirect: 90,			// Direction en ° /centre de projection cadran analemmatique, positif en haut du cadran
+	ydirect: 0,			// Direction en ° /centre de projection cadran analemmatique, positif en haut du cadran
 	zdirect: 60,		// Distance relative du centre de projection cadran analemmatique, positif au dessus du cadran
-	Hanalem: 100,		// Hauteur relative du gnomon pour cadran analemmatique
+	Hanalem: 200,		// Hauteur du gnomon pour cadran analemmatique
 	Ranalem: 200,		// Rayon du cercle équatorial pour cadran analemmatique
-	//DatesAlalem: [],     // dates sur l'axe des dates
 	colorAnalem: "rgb(100,10,100)",
 	Canalem: false,	// Cadran analemmatique à projection centale   
 	textSizeANL: 1,

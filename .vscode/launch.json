@@ -6,20 +6,6 @@
     "configurations": [
       
         {
-            "name": "Launch Edge AJL",
-            "request": "launch",
-            "type": "msedge",
-            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod.html",
-            "webRoot": "${workspaceFolder}"
-        },
-        {
-            "name": "Launch Edge YM",
-            "request": "launch",
-            "type": "msedge",
-            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod_ym.html",
-            "webRoot": "${workspaceFolder}"
-        },
-        {
             "type": "chrome",
             "request": "launch",
             "name": "colmod.html",
@@ -29,14 +15,16 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "colmod_ym3.html",
-            "url": "http://192.168.1.14/CadsolOnLine/sources/colmodYM3.html"
+            "name": "colmodYM4.html",
+            "url": "http://192.168.1.14/CadsolOnLine/sources/colmodYM4.html"
         }
+        ,
         {
             "type": "chrome",
             "request": "launch",
-            "name": "colmo_jl2.html",
-            "url": "http://192.168.1.14/CadsolOnLine/sources/colmod_jl2.html"
+            "name": "colmodJLYM.html",
+            "url": "http://192.168.1.14/CadsolOnLine/sources/colmodJLYM.html"
         }
+        
     ]
 }
