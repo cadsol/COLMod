@@ -1,7 +1,8 @@
 /**
  * Data from the website "Virtual Polyhedra: The Encyclopedia of Polyhedra" by George W. Hart
- *   http://www.georgehart.com/virtual-polyhedra/vp.html
+ * http://www.georgehart.com/virtual-polyhedra/vp.html
  * Converted to JSON by Lee Stemkoski
+ * https://github.com/finnp/polyhedra/tree/master
  */
  
 export const POLYHEDRA = {

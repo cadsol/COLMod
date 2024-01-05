@@ -3400,6 +3400,7 @@
 					if (e == "3D(.PLY)") { saveString(GenererPLY(), cs.nameFile + ".PLY") };
 					if (e == "3D(.OBJ)") { saveString(GenererOBJ(), cs.nameFile + ".OBJ") };
 					if (e == "3D(.STL)") { saveString(GenererSTL(), cs.nameFile + ".STL") };
+					if (e == "3D(.GLTF)") { saveString(GenererGLTF(), cs.nameFile + ".GLTF") };
 					if (e == "Scal.Vect.Graph.(.SVG)") {
 						construireFichierSVG()
 						saveString(SVGtext, cs.nameFile + '.svg')
@@ -3419,7 +3420,7 @@
 			folderFiles.add(cs, "nameFile").name("File name")
 
 			folderFiles.add(cs, "export",
-				["Sundial(.JSON)", "Spreadsheet(.CSV)", "3D(.PLY)", "3D(.OBJ)", "3D(.STL)",
+				["Sundial(.JSON)", "Spreadsheet(.CSV)", "3D(.PLY)", "3D(.OBJ)", "3D(.STL)","3D(.GLTF)",
 					"Ephemeris(.CSV)", "Scal.Vect.Graph.(.SVG)", "Params (.HTML)"])
 				.name('Type of file')
 				.onChange(function (e) {
@@ -3613,8 +3614,16 @@
 			return s
 		}
 
-
-
+		function GenererGLTF(){
+			let s = "";
+			const gltfExporter = new GLTFExporter();
+			gltfExporter.parse(scene,
+			function ( gltf ) {console.log( gltf )
+				            const output = JSON.stringify(gltf, null, 2 );
+							console.log( output );
+							saveString( output, 'scene.gltf' );},
+			function ( error ) {console.log( 'An error happened' )})
+			}
 
 
 
@@ -4015,21 +4024,19 @@
 
 
 				const meshGeometry = new ConvexGeometry(verticesFaces);
+				//meshGeometry.computeVertexNormals()
 
 				meshFace = new THREE.Mesh(meshGeometry, materialCS);
 				meshFace.lookAt(new THREE.Vector3(0, 0, 0))
 				meshFace.receiveShadow = true
 				meshFaces.push(meshFace)
 				meshFacesGroup.add(meshFace)
-				h = centerFace.distanceTo(a) / 3 //* (cs.zgnomon/100)
+				h = centerFace.distanceTo(a) / 3 
 				dmax.push(h)
 				//h=cs.zgnomon
 
 				if (h > hmax) { hmax = h; nFaceMax = f }  //recherche d'une "grande" face
-				if (cs.polyGz[f] == 0) {
-					//cs.positionDevisex = -h; cs.positionDevisey = h;
-					cs.polyGz[f] = h
-				} else { h = cs.polyGz[f] }
+				if (cs.polyGz[f] == 0) {cs.polyGz[f] = h} else { h = cs.polyGz[f] }
 				if (f == nFaceBase) { h = 0; cs.polyGz[f] = 0 }
 
 				TracerGnomonPoly(h)
@@ -4056,7 +4063,7 @@
 			} //f
 
 			cadranSolaireGroup.add(meshFacesGroup)
-
+			
 			for (let n = 0; n < nbFaces; n++) {
 				cadran = meshFaces[n].clone()
 				EcrireDevise(cs.polyDev[n], cs.polyDevx[n], cs.polyDevy[n], n)
