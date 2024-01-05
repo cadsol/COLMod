@@ -28,7 +28,8 @@
 			Astronomical library:
 			<a href="https://en.wikipedia.org/wiki/Jean_Meeus" target="_blank" rel="noopener">Jean Meeus & </a>
 			<a href="https://en.wikipedia.org/wiki/Sonia_Keys" target="_blank" rel="noopener">Sonia Keys</a> <br>
-			Polyhedra database: <a href="https://home.adelphi.edu/~stemkoski" target="_blank" rel="noopener">Lee Stemkoski</a> <br>
+			Polyhedra database: <a href="https://home.adelphi.edu/~stemkoski" target="_blank" rel="noopener">Lee
+				Stemkoski</a> <br>
 			<p>
 				<img src="./imageMoret.jpg" alt="Image" style="max-width:100%;height:auto">
 			</p>
@@ -87,7 +88,7 @@
 		import { ParametricGeometry } from 'three/addons/geometries/ParametricGeometry.js';
 		import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 
-		import { POLYHEDRA } from './polyhedra.js';
+
 
 		document.addEventListener("readystatechange", function (evt) { console.log(document.readyState) })
 
@@ -103,8 +104,10 @@
 			HSDSA = "Sidereal (summer, autumn)", HSDWS = "Sidereal (winter, spring)",
 			HPSA = "Planetary (summer, autumn)", HPWS = "Planetary (winter, spring)";
 
-		// -----------------------------------COLVARS--------------------------------------------------------------------------------------------
-		import { SP, BF, BFG, ANL, RTS, cs, TableSol, RechercheParAdresse, getLocation, eclair, HTLM } from './colvars.js';
+		// -----------------------------------Modules--------------------------------------------------------------------------------------------
+		import { SP, BF, BFG, ANL, RTS, cs, TableSol, RechercheParAdresse, getLocation, HTLM } from './Modcolvars.js';
+		import { eclair, Rot, EtoC, ddrte, segm } from './ModAnalem.js';
+		import { POLYHEDRA } from './ModPolyhedra.js';
 		// --------------------------------------------------------------------------------------------------------------------------------------	
 
 		cs.version = "2023-12-31"
@@ -283,12 +286,12 @@
 		const textureAsphalt = new THREE.TextureLoader().load('./asphalt.jpg')
 		textureAsphalt.name = 'asphalt'
 		const texturePierreVerte = new THREE.TextureLoader().load('./greenStone.jpg');
-		texturePierreVerte.name = 'green stone'	
+		texturePierreVerte.name = 'green stone'
 		const textureBois = new THREE.TextureLoader().load('./textures/hardwood2_diffuse.jpg');
 		textureBois.name = 'wood'
 		const textureEau = new THREE.TextureLoader().load('./textures/waternormals.jpg');
 		textureEau.name = 'water'
-		
+
 
 
 		const choixTextures = {
@@ -843,22 +846,7 @@
 			document.body.style.cursor = 'auto'
 		}
 
-
-
-		function Rot(x, y, r) {
-			r *= Math.PI / 180;
-			return [Math.cos(r) * x + Math.sin(r) * y, -Math.sin(r) * x + Math.cos(r) * y];
-		}
-
-		function EtoC(x, y, z) {             // Changement de coordonnées équatoriales --> cadran
-			[z, x] = Rot(z, x, 90 - cs.lati);  // ... dans le repère local
-			[x, y] = Rot(x, y, cs.decli);
-			[z, x] = Rot(z, x, cs.incli);      // ... dans le repère cadran
-			return [x, y, z];
-		}
-
 		let xd = 0, yd = 0, zd = 1    // Direction Gnomon analemmatique  Modif AJL 
-
 		function Proj([x, y, z]) {            // Projection sur le cadran avec mise à la dimension R
 			x *= cs.Ranalem; y *= cs.Ranalem; z *= cs.Ranalem;
 			const bc = cs.Canalem ? 1 : 0;
@@ -867,98 +855,6 @@
 			return new THREE.Vector3((y * zd - z * xd) / (zd - bc * z) + cs.xgnomon, (-x * zd - z * yd) / (zd - bc * z) + cs.ygnomon, pr);
 		}
 
-		function ddrte(pts, dx, dy, inv = false) {
-			// Complète pts avec les points extrèmes d'une demi-droite à l'intérieur du cadran
-			const xlm = cs.largeur / 2, ylm = cs.hauteur / 2;
-			const pt0 = pts.pop(), i = pts.length;
-			var sl, k = 0, rt = 0, xi, yi, m;
-			pt0.z = Math.abs(pt0.z);
-			if (Math.abs(pt0.x) <= xlm && Math.abs(pt0.y) <= ylm) {	// pts[i] est à l'intérieur du rectangle,
-				rt = 2; pts.push(pt0); k++;						// le point est conservé.
-			}
-			while (k < 2) {
-				if (dx != 0) {
-					sl = (k == 0) ? -Math.sign(dx) : Math.sign(dx);	// Pour trouver, et dans le bon ordre.
-					m = (sl * xlm - pt0.x) / dx;
-					if (m > 0) {									// => La demi-droite coupe la droite x = sl * xlm,
-						yi = m * dy + pt0.y;				// en y = yi.
-						if (Math.abs(yi) <= ylm) {	// => yi est entre les limites,
-							if (k == 0) rt = 4;				// l'intersection est conservée.
-							pts.push(new THREE.Vector3(sl * xlm, yi, cs.epaisseur / 2));
-							if (pts.length == i + 2) break;
-						}
-					}
-				}
-				if (dy != 0) {
-					sl = (k == 0) ? -Math.sign(dy) : Math.sign(dy);	// Pour trouver, et dans le bon ordre.
-					m = (sl * ylm - pt0.y) / dy;
-					if (m > 0) {									// => La demi-droite coupe la droite y = sl * ylm,
-						xi = m * dx + pt0.x;				// en x = xi.
-						if (Math.abs(xi) <= xlm) {	// => xi est entre les limites,
-							if (k == 0) rt = 4;				// l'intersection est conservée.
-							pts.push(new THREE.Vector3(xi, sl * ylm, cs.epaisseur / 2));
-							if (pts.length == i + 2) break;
-						}
-					}
-				}
-				k++;
-			}
-			if (inv) {										// La demi droite se termine par pt0
-				if (rt == 0) pts.push(pt0);	// Pour un éventuel enchainement
-				else {											// Inversion des deux points
-					pt0 = pts[i]; pts.splice(i, 1); pts.push(pt0);
-				}
-			}
-			return rt;
-		}
-
-		function segm(pts, pt1) {
-			// Complète pts avec les points extrèmes d'un segment à l'intérieur du cadran
-			const xlm = cs.largeur / 2, ylm = cs.hauteur / 2;
-			const pt0 = pts.pop(), i = pts.length;
-			const dx = pt1.x - pt0.x, dy = pt1.y - pt0.y;
-			var sl, k = 0, s = 1, rt = 0, xi, yi, m;
-			if (Math.abs(pt0.x) <= xlm && Math.abs(pt0.y) <= ylm) {	// pts[i] est à l'intérieur du cadran,
-				pts.push(pt0);						// le point est conservé.
-				rt = 2; k++;
-			}
-			if (Math.abs(pt1.x) <= xlm && Math.abs(pt1.y) <= ylm) { // pt1 est à l'intérieur du cadran,
-				pts.push(pt1);						// le point est conservé.
-				rt++; k++; if (k == 1) s = -1;
-			}
-			while (k < 2) {
-				if (dx != 0) {
-					sl = (k == 0) ? -s * Math.sign(dx) : s * Math.sign(dx);	// Pour trouver, et dans le bon ordre.
-					m = (sl * xlm - pt0.x) / dx;
-					if (m > 0 && m <= 1) {				// => Le segment coupe la droite x = sl * xlm,
-						yi = m * dy + pt0.y;				// en y = yi.
-						if (Math.abs(yi) <= ylm) {	// => yi est entre les limites,
-							if (k == 0) rt = 4;				// l'intersection est conservée.
-							pts.push(new THREE.Vector3(sl * xlm, yi, cs.epaisseur / 2));
-							if (pts.length == i + 2) break;
-						}
-					}
-				}
-				if (dy != 0) {
-					sl = (k == 0) ? -s * Math.sign(dy) : s * Math.sign(dy);	// Pour trouver, et dans le bon ordre.
-					m = (sl * ylm - pt0.y) / dy;
-					if (m > 0 && m < 1) {				// => Le segment coupe la droite y = sl * ylm,
-						xi = m * dx + pt0.x;				// en x = xi.
-						if (Math.abs(xi) <= xlm) {	// => xi est entre les limites,
-							if (k == 0) rt = 4;				// l'intersection est conservée.
-							pts.push(new THREE.Vector3(xi, sl * ylm, cs.epaisseur / 2));
-							if (pts.length == i + 2) break;
-						}
-					}
-				}
-				k++;
-			}
-			if (rt == 0) pts.push(pt1);	// Pour un éventuel enchainement le second point est placé dans le tableau.
-			else if (s == -1) {					// Inversion des deux points
-				pt1 = pts[i]; pts.splice(i, 1); pts.push(pt1);
-			}
-			return rt;
-		}
 
 		function TracerAnalem() {
 			cs.hoursTextSize = cs.textSizeANL;
@@ -982,16 +878,16 @@
 			x = xd * dc; y = yd * dc; z = zd * dc;
 			ch = "  " + cs.separateurCSV + "  ";
 			CSVtext += "End of the gnomon placed at X0, Y0, Z0 = 0\n\n";
-			CSVtext += "point" + ch + x.toFixed(3) + ch + y.toFixed(3) + ch + z.toFixed(3)+ "\n";
+			CSVtext += "point" + ch + x.toFixed(3) + ch + y.toFixed(3) + ch + z.toFixed(3) + "\n";
 			if (cs.Canalem) {
 				CSVtext += "\n\nCenter position\n\n";
-				CSVtext += "point" + ch + xd.toFixed(3) + ch + yd.toFixed(3) + ch + zd.toFixed(3)+ "\n";
+				CSVtext += "point" + ch + xd.toFixed(3) + ch + yd.toFixed(3) + ch + zd.toFixed(3) + "\n";
 			}
 			ligneSVG(cs.xgnomon, cs.ygnomon, x + cs.xgnomon, y + cs.ygnomon, 1, "gray");
-			x = -cs.largeur/2 + 5; y = cs.hauteur / 2 - 5;
+			x = -cs.largeur / 2 + 5; y = cs.hauteur / 2 - 5;
 			dc = cs.Ranalem * cs.zdirect / 100;
 			croixSVG(x, y);
-		  ligneSVG(x, y, x + cs.Hanalem, y);
+			ligneSVG(x, y, x + cs.Hanalem, y);
 			if (cs.Canalem) {
 				disqueSVG(xd + cs.xgnomon, yd + cs.ygnomon, 3, "gray");
 				if (dc >= 0) {
@@ -1004,21 +900,21 @@
 					croixSVG(x - dc, y);
 				}
 			}
-			dc = 180 * Math.atan(Math.abs(zd) / Math.sqrt(xd**2 + yd**2)) / Math.PI;
+			dc = 180 * Math.atan(Math.abs(zd) / Math.sqrt(xd ** 2 + yd ** 2)) / Math.PI;
 			ch = `Angle : ${dc.toFixed(2)}°`;
 			y = cs.hauteur / 2 - y + 12;
 			if (SVGtext.length > 0) {
 				SVGtext += `<text x="5" y="10" font-size="10" font-family="Courier New" stroke="black">${ch}</text>
            `;
 			}
-		//	dc = cs.Hanalem * 100 / cs.Ranalem / cs.zdirect;
-		//	ch = "  " + cs.separateurCSV + "  ";
-		//	x = (cs.Canalem) ? xd : xd * dc;
-		//	y = (cs.Canalem) ? yd : yd * dc;
-		//	z = (cs.Canalem) ? zd : zd * dc;
-		//	CSVtext += "point" + ch + x.toFixed(3) + ch + y.toFixed(3) + ch + z.toFixed(3) + "\n";
-		//	ligneSVG(cs.xgnomon, cs.ygnomon, x + cs.xgnomon, y + cs.ygnomon, 1, "black", 3);
-		//	croixSVG(x + cs.xgnomon, y + cs.ygnomon);
+			//	dc = cs.Hanalem * 100 / cs.Ranalem / cs.zdirect;
+			//	ch = "  " + cs.separateurCSV + "  ";
+			//	x = (cs.Canalem) ? xd : xd * dc;
+			//	y = (cs.Canalem) ? yd : yd * dc;
+			//	z = (cs.Canalem) ? zd : zd * dc;
+			//	CSVtext += "point" + ch + x.toFixed(3) + ch + y.toFixed(3) + ch + z.toFixed(3) + "\n";
+			//	ligneSVG(cs.xgnomon, cs.ygnomon, x + cs.xgnomon, y + cs.ygnomon, 1, "black", 3);
+			//	croixSVG(x + cs.xgnomon, y + cs.ygnomon);
 
 			// Courbe horaire -------------------------
 			CSVtext += "\n\nHour curve\n";
@@ -2099,9 +1995,7 @@
 			reader.addEventListener("load", () => {
 				try { csl = JSON.parse(reader.result) }
 				catch (e) { console.error("Parsing error:", e) }
-				//console.log(JSON.stringify(csl,null,2));
 				for (let k in csl) { cs[k] = csl[k] }   //  ;console.log(k,cs[k],csl[k])
-
 				TS = TableSol(cs.year);
 				NouveauCadran = false
 				//	console.log(JSON.stringify(cs,null,2)) 
@@ -2109,11 +2003,8 @@
 			}, false);
 
 			if (file) {
-
 				reader.readAsText(file);
 			}
-
-			//console.log(file)
 
 			return reader.result;
 		}
@@ -3065,7 +2956,7 @@
 					materialCS.needsUpdate = true
 					if (t == null) { cs.name = 'none' } else { cs.nameTexture = t.name }
 				});
- 
+
 
 			const folderHours = gui.addFolder(sp + 'Hours');
 			materialHeuresSolaires.color.setStyle(cs.colorHS);
@@ -3445,7 +3336,7 @@
 			folderFiles.add(cs, "nameFile").name("File name")
 
 			folderFiles.add(cs, "export",
-				["Sundial(.JSON)", "Spreadsheet(.CSV)", "3D(.PLY)", "3D(.OBJ)", "3D(.STL)","3D(.GLTF)",
+				["Sundial(.JSON)", "Spreadsheet(.CSV)", "3D(.PLY)", "3D(.OBJ)", "3D(.STL)", "3D(.GLTF)",
 					"Ephemeris(.CSV)", "Scal.Vect.Graph.(.SVG)", "Params (.HTML)"])
 				.name('Type of file')
 				.onChange(function (e) {
@@ -3639,16 +3530,18 @@
 			return s
 		}
 
-		function GenererGLTF(){
+		function GenererGLTF() {
 			let s = "";
 			const gltfExporter = new GLTFExporter();
 			gltfExporter.parse(scene,
-			function ( gltf ) {console.log( gltf )
-				            const output = JSON.stringify(gltf, null, 2 );
-							console.log( output );
-							saveString( output, 'scene.gltf' );},
-			function ( error ) {console.log( 'An error happened' )})
-			}
+				function (gltf) {
+					console.log(gltf)
+					const output = JSON.stringify(gltf, null, 2);
+					console.log(output);
+					saveString(output, 'scene.gltf');
+				},
+				function (error) { console.log('An error happened') })
+		}
 
 
 
@@ -4056,12 +3949,12 @@
 				meshFace.receiveShadow = true
 				meshFaces.push(meshFace)
 				meshFacesGroup.add(meshFace)
-				h = centerFace.distanceTo(a) / 3 
+				h = centerFace.distanceTo(a) / 3
 				dmax.push(h)
 				//h=cs.zgnomon
 
 				if (h > hmax) { hmax = h; nFaceMax = f }  //recherche d'une "grande" face
-				if (cs.polyGz[f] == 0) {cs.polyGz[f] = h} else { h = cs.polyGz[f] }
+				if (cs.polyGz[f] == 0) { cs.polyGz[f] = h } else { h = cs.polyGz[f] }
 				if (f == nFaceBase) { h = 0; cs.polyGz[f] = 0 }
 
 				TracerGnomonPoly(h)
@@ -4088,7 +3981,7 @@
 			} //f
 
 			cadranSolaireGroup.add(meshFacesGroup)
-			
+
 			for (let n = 0; n < nbFaces; n++) {
 				cadran = meshFaces[n].clone()
 				EcrireDevise(cs.polyDev[n], cs.polyDevx[n], cs.polyDevy[n], n)
@@ -4241,18 +4134,6 @@
 			}
 			nfaceActive = 0
 			tracerFaceActive()
-			// PlacerStyleToriquePoly(nfaceActive, hauteursGnomons[nfaceActive])
-			// rapellerFace(nfaceActive)
-			// cadran = meshFaces[nfaceActive].clone()				
-			// displayFaces(polyhedre)
-			// TracerHeuresEtArcs()
-			// VoirPoly2D = false
-			// EcrireDevise(cs.polyDev[nfaceActive], cs.polyDevx[nfaceActive], cs.polyDevy[nfaceActive])
-			// cs.xgnomon=cs.polyGx[nfaceActive]
-			// cs.ygnomon=cs.polyGy[nfaceActive]
-			// cs.zgnomon=cs.polyGz[nfaceActive]
-			// cs.positionDevisex=cs.polyDevx[nfaceActive]
-			// cs.positionDevisey=cs.polyDevy[nfaceActive]
 		}
 
 
@@ -4347,10 +4228,7 @@
 						cs.decli = vNorm.angleTo(vSud) * 180 / Math.PI
 						if (normalsFaces[nfaceActive][0] > 0) { cs.decli = -cs.decli }
 						displayFaces(polyhedre)
-						//TracerHeuresEtArcs() 
 						tracerTouteslesfaces()
-						//EcrireDevise(cs.devise, cs.positionDevisex, cs.positionDevisey)	
-						//PolyTracerHeuresEtArcs() 
 						SudSundial.hide()
 					}
 				}
@@ -4463,6 +4341,7 @@
 					cs.decli = 0; cs.incli = 90; cs.rot = 0
 					cadranSolaireGroup.clear()
 					displayFaces(polyhedre)
+					
 					faceSurBase(nFaceMax)
 					SudSundial.show()
 					// nfaceActive = 0	
