@@ -110,7 +110,7 @@
 		import { POLYHEDRA } from './ModPolyhedra.js';
 		// --------------------------------------------------------------------------------------------------------------------------------------	
 
-		cs.version = "2023-12-31"
+		cs.version = "2024-01-06"
 		console.log('THREE.REVISION :  ', THREE.REVISION)
 		// const cso = structuredClone(cs)
 		// console.log(cso)
@@ -904,17 +904,9 @@
 			ch = `Angle : ${dc.toFixed(2)}°`;
 			y = cs.hauteur / 2 - y + 12;
 			if (SVGtext.length > 0) {
-				SVGtext += `<text x="5" y="10" font-size="10" font-family="Courier New" stroke="black">${ch}</text>
+				SVGtext += `<text x="5" y="${y}" font-size="10" font-family="Courier New" stroke="black">${ch}</text>
            `;
 			}
-			//	dc = cs.Hanalem * 100 / cs.Ranalem / cs.zdirect;
-			//	ch = "  " + cs.separateurCSV + "  ";
-			//	x = (cs.Canalem) ? xd : xd * dc;
-			//	y = (cs.Canalem) ? yd : yd * dc;
-			//	z = (cs.Canalem) ? zd : zd * dc;
-			//	CSVtext += "point" + ch + x.toFixed(3) + ch + y.toFixed(3) + ch + z.toFixed(3) + "\n";
-			//	ligneSVG(cs.xgnomon, cs.ygnomon, x + cs.xgnomon, y + cs.ygnomon, 1, "black", 3);
-			//	croixSVG(x + cs.xgnomon, y + cs.ygnomon);
 
 			// Courbe horaire -------------------------
 			CSVtext += "\n\nHour curve\n";
@@ -2121,12 +2113,14 @@
 
 				function TracerSolide() {
 					if (NouveauCadran == true) {
-						if (cs.typeForme == "parallelepiped") { cs.epaisseur = 30; cs.largeur = 600 } else { cs.epaisseur = 400; cs.largeur = 400 }
-						cs.hauteur = 400;
+		
+						if (cs.typeForme=="parallelepiped"){cs.epaisseur = 30;cs.largeur=600}else{cs.epaisseur = 400;cs.largeur = 400}
+						cs.hauteur =400;
 						cs.xgnomon = 0; cs.ygnomon = cs.hauteur / 4;
 						cs.zgnomon = cs.epaisseur / 2 + cs.hgnomon
-						if (cs.typeForme == "cone") { cs.ygnomon = 5; cs.zgnomon = 145 }
-						cs.decli = 0; cs.incli = 90
+						if (cs.typeForme=="cylinder"){cs.ygnomon =100;cs.zgnomon = 450}
+						if (cs.typeForme=="cone"){cs.ygnomon = 5;cs.zgnomon=145}
+						cs.decli=0;cs.incli=90
 					}
 
 					cadran.scale.x = cs.largeur;
@@ -3894,8 +3888,7 @@
 			let nSommetsParFace = 0, v, h, hmax, dmax = []
 			let text = ""
 			let a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(),
-				normalFace = new THREE.Vector3()
-			//,Oworld=new THREE.Vector3(0,0,0)
+			normalFace = new THREE.Vector3()
 
 			normalsFaces = [], hauteursGnomons = [], centersFaces = []
 
@@ -4191,6 +4184,7 @@
 
 			cs.subDivisions = cs.polysubDivisions[f]
 		}
+
 		function tracerFaceActive() {
 			PlacerStyleToriquePoly(nfaceActive, hauteursGnomons[nfaceActive])
 			rapellerFace(nfaceActive)
@@ -4496,16 +4490,17 @@
 				polyheuresHPWSgroup.push(new THREE.Group())
 				polyarcsDiurnesGroup.push(new THREE.Group())
 			}
-			cs.heuresSolaires = false
-			cs.heuresLegalesSummerAutums = false
-			cs.heuresLegalesWinterSpring = false
-			cs.heuresAntiques = false
-			cs.heuresBabyloniques = false
-			cs.heuresItaliques = false
-			cs.heuresSideralesWS = false
-			cs.heuresSideralesSA = false
-			cs.heuresPlanetairesWS = false
-			cs.heuresPlanetairesSA = false
+			TouteslesHeuresFalse()
+			// cs.heuresSolaires = false
+			// cs.heuresLegalesSummerAutums = false
+			// cs.heuresLegalesWinterSpring = false
+			// cs.heuresAntiques = false
+			// cs.heuresBabyloniques = false
+			// cs.heuresItaliques = false
+			// cs.heuresSideralesWS = false
+			// cs.heuresSideralesSA = false
+			// cs.heuresPlanetairesWS = false
+			// cs.heuresPlanetairesSA = false
 		}
 
 
