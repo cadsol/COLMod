@@ -1,5 +1,6 @@
 
 import { cs } from './Modcolvars.js';
+import * as THREE from 'three';
 
 
 

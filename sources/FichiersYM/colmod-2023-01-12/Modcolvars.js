@@ -11,7 +11,7 @@ import {
 
 //export const SP = "Polar or straight style", BF = "Bifilar (vertical)", BFG = 'Bifilar generalised', ANL = 'Analemmatic';///+++
 export const SP = "Polar or straight style", BF = "Bifilar (vertical)", BFG = 'Bifilar generalised', ANL = 'Analemmatic', RTS='Ray tracing sundial';///+++
-
+export const CPS = "Sphere projection";
 //export let cadran;
  
 export let cs = {
@@ -53,6 +53,14 @@ export let cs = {
 	textSizeANL: 1,
 	dateAnalem: 21,     // dates sur l'axe des dates
 	subAnalem: 1,
+	///++++ sphere projection
+	GSphere: 200,		// Longueur du gnomon
+	RSphere: 100,		// Rayon de la sphère (valeur calculée)
+	RCadran: 200,		// Rayon du cercle sur le cadran
+	colorSphere: "rgb(20,120,20)",
+	SSphere: 1,			// 1 ou -1 -> type de pôle pour la projection stéréographique.
+	KSphere: 0, 		// Angle K de -89 à 89°
+	textSizeCPS: 1,
 	///++++
 
 	hfilHorizontal: 30,
@@ -371,7 +379,6 @@ export function getLocation() {
 		alert("Geolocation is not supported by this browser.");
 	}
 }
-
 
 // --------------------------------------------------------------------------------------------------------
 
