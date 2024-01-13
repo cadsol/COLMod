@@ -6,3 +6,5 @@ avec modules Javascript
 ![Capture d’écran 2022-08-01 163454](https://user-images.githubusercontent.com/24637950/233867919-a5abe756-8837-4f34-bd7f-77bcbfb89575.jpg)
 
 ![Surface_z=f(x,y)](https://user-images.githubusercontent.com/24637950/233867594-d15e9dbb-15f0-4553-9edd-30020c25feb0.jpg)
+
+![TruncatedIcosahedron2](https://github.com/cadsol/COLMod/assets/24637950/28377340-be78-4108-aa93-b971c44a1905)
