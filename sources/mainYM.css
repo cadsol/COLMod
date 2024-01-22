@@ -145,3 +145,8 @@
  	background: #0415aa;
  	cursor: pointer;
  }
+
+ .lil-gui {
+	--hover-color: #540e0e;
+	--focus-color: #2b2839;
+}
