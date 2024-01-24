@@ -1,4 +1,4 @@
 
 # CadsolOnLine
 Deprecated,
-use reprertory: CadsolOnLine
+Deprecated Use the repertory cadsol/CadsolOnLine
